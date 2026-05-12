@@ -12,16 +12,21 @@ export default function MainDashboardLayout({
   return (
     <main 
       className="min-h-screen p-6 md:p-10 font-sans transition-colors duration-300"
-      style={{ backgroundColor: colors.background }}
+      // This is the key line that makes the "gray" pop
+      style={{ backgroundColor: colors.background }} 
     >
       {/* Persistent Brand Header */}
       <header className="mb-10 flex items-center justify-between max-w-7xl mx-auto">
         <Link href="/" className="group">
-          <h1 className="text-2xl font-black tracking-tighter text-zinc-950 group-hover:text-emerald-600 transition-colors">
+          {/* UPDATED: Using colors.textMain instead of zinc-950 */}
+          <h1 
+            className="text-2xl font-black tracking-tighter transition-colors group-hover:text-emerald-600"
+            style={{ color: colors.textMain }}
+          >
             SPC DRIVE
           </h1>
-          <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.2em]">
-            System Control Interface
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: colors.textMuted }}>
+            Secure File Platform
           </p>
         </Link>
 
@@ -29,13 +34,13 @@ export default function MainDashboardLayout({
         <div 
           className="h-12 w-12 flex items-center justify-center border shadow-sm transition-transform hover:rotate-90"
           style={{ 
-            backgroundColor: colors.card, 
+            backgroundColor: colors.card, // Pops white against the gray background
             borderColor: colors.border,
-            borderRadius: '1rem' 
+            borderRadius: radius.base // Using your theme radius
           }}
         >
           <div 
-            className="h-2.5 w-2.5 rounded-full animate-pulse shadow-[0_0_8px]"
+            className="h-2.5 w-2.5 rounded-full animate-pulse"
             style={{ 
               backgroundColor: colors.primary,
               boxShadow: `0 0 12px ${colors.primary}`
@@ -44,14 +49,18 @@ export default function MainDashboardLayout({
         </div>
       </header>
 
-      {/* The Page Content (Bento Grid) */}
+      {/* The Page Content (The white Bento Boxes will sit here) */}
       <div className="max-w-7xl mx-auto">
         {children}
       </div>
 
       {/* Subtle Footer */}
-      <footer className="mt-20 py-8 border-t border-zinc-200 text-center max-w-7xl mx-auto">
-        <p className="text-[9px] text-zinc-300 font-black uppercase tracking-[0.4em]">
+      {/* UPDATED: Using theme border color */}
+      <footer 
+        className="mt-20 py-8 border-t text-center max-w-7xl mx-auto"
+        style={{ borderColor: colors.border }}
+      >
+        <p className="text-[9px] font-black uppercase tracking-[0.4em]" style={{ color: colors.textMuted }}>
           Secured Protocol • San Pablo City Node
         </p>
       </footer>

@@ -1,58 +1,81 @@
 'use client';
+
 import { useSPCTheme } from '@/providers/ThemeProvider';
 import { ReactNode } from 'react';
+import Image from 'next/image';
 
-interface DashboardShellProps {
-  children: ReactNode;
-  title: string;
-  role: string;
-  userName: string;
-  onLogout: () => void;
-}
-
-export function DashboardShell({ children, title, role, userName, onLogout }: DashboardShellProps) {
-  const { colors, radius } = useSPCTheme();
+export function DashboardShell({
+  children,
+  title,
+  role,
+  userName,
+  onLogout,
+}: any) {
+  const { colors } = useSPCTheme();
 
   return (
-    <div className="min-h-screen p-4 md:p-8" style={{ backgroundColor: colors.background }}>
-      <div className="max-w-7xl mx-auto space-y-8">
-        
-        {/* Top Header Section */}
-        <header className="flex justify-between items-center">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <div 
-                className="px-2 py-0.5 text-[10px] font-black uppercase tracking-widest rounded-md"
-                style={{ backgroundColor: colors.primaryLight, color: colors.primary }}
-              >
-                {role} Node
-              </div>
-              <span className="text-zinc-400 text-xs font-bold uppercase tracking-tighter">System / {title}</span>
+    // FIX: Removed 'bg-slate-50' and linked it to your Theme Provider background
+    <div 
+      className="min-h-screen p-4 md:p-10 font-sans transition-colors duration-500"
+      style={{ backgroundColor: colors.background }}
+    >
+      
+      <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700">
+
+        {/* HEADER */}
+        <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+
+          <div className="flex items-center gap-6">
+
+            {/* Logo box remains pure white to pop against the dark background */}
+            <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center">
+              <Image
+                src="/assets/SPCLOGO.avif"
+                alt="SPC"
+                width={40}
+                height={40}
+              />
             </div>
-            <h1 className="text-3xl font-black text-zinc-950 tracking-tight">
-              Welcome back, <span style={{ color: colors.primary }}>{userName.split(' ')[0]}</span>
-            </h1>
+
+            <div>
+              {/* Using colors.primary for the breadcrumb instead of gray */}
+              <p className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: `${colors.primary}88` }}>
+                System Node • {title}
+              </p>
+
+              {/* Title color linked to theme textMain */}
+              <h1 className="text-4xl font-black tracking-tight" style={{ color: colors.textMain }}>
+                {userName}
+              </h1>
+            </div>
           </div>
 
-          <button 
+        {/* Sign Out Button in DashboardShell.tsx */}
+            <button
             onClick={onLogout}
-            className="group flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-95"
-            style={{ backgroundColor: colors.textMain, color: 'white' }}
-          >
-            <span className="group-hover:text-red-400 transition-colors">Terminate Session</span>
-          </button>
+            className="px-6 py-3 text-[10px] font-black uppercase tracking-widest border rounded-xl transition-all active:scale-95 bg-white shadow-sm"
+            style={{ 
+                color: colors.danger,           // Use the new red color
+                borderColor: `${colors.danger}20` // Very light red border (20% opacity)
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = `${colors.danger}08`; // Faint red tint on hover
+                e.currentTarget.style.borderColor = colors.danger;
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#ffffff';
+                e.currentTarget.style.borderColor = `${colors.danger}20`;
+            }}
+            >
+            Sign Out
+            </button>
         </header>
 
-        {/* Main Content Area (Where your Bento Cards go) */}
-        <main className="w-full">
+        {/* CONTENT */}
+        <main className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
           {children}
         </main>
 
-        {/* System Footer */}
-        <footer className="pt-8 border-t border-zinc-200 flex justify-between items-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-          <p>© 2026 SPC DRIVE • {role}_AUTH_SUCCESS</p>
-          <p>Location: San Pablo City</p>
-        </footer>
       </div>
     </div>
   );

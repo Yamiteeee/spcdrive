@@ -3,16 +3,16 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMockAuth } from '@/hooks/useMockAuth';
 import { BentoCard } from '@/components/BentoCard';
-import MainDashboardLayout from '@/components/layouts/MainDashboardLayout';
+import { DashboardShell } from '@/components/DashboardShell';
 import { useSPCTheme } from '@/providers/ThemeProvider';
-import { FileBank } from '@/components/FileBank'; // Import the component we discussed
+import { FileBank } from '@/components/FileBank';
+import { Upload, UserCircle, History, ArrowRight } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, logout, loading } = useMockAuth();
   const { colors } = useSPCTheme();
   const router = useRouter();
 
-  // Mock data for the File Bank
   const [files] = useState([
     { id: '1', name: 'SPC_System_Core_v2.bin', size: '1.2 GB', type: 'EXE', updatedAt: '2026-05-12' },
     { id: '2', name: 'Database_Backup_May.sql', size: '450 MB', type: 'SQL', updatedAt: '2026-05-10' },
@@ -31,86 +31,92 @@ export default function AdminDashboard() {
 
   if (!user || loading || user.role !== 'admin') {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-zinc-50">
+      <div className="flex flex-col items-center justify-center h-screen" style={{ backgroundColor: colors.background }}>
         <div 
           className="w-10 h-10 border-4 border-t-transparent rounded-full animate-spin" 
           style={{ borderColor: `${colors.primary}33`, borderTopColor: colors.primary }}
         />
-        <p className="mt-4 text-zinc-400 text-[10px] font-bold uppercase tracking-[0.3em] animate-pulse">
-          Authenticating Root...
-        </p>
       </div>
     );
   }
 
   return (
-    <MainDashboardLayout>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <DashboardShell 
+      title="File Manager" 
+      role="Administrator" 
+      userName={user.name} 
+      onLogout={logout}
+    >
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
         
-        {/* Admin Branding & Quick Upload */}
-        <BentoCard className="md:col-span-2 bg-white border-zinc-200">
-          <div className="flex justify-between items-center">
+        {/* Profile & Upload Action - Pure White */}
+        <BentoCard className="md:col-span-4">
+          <div className="flex flex-col md:flex-row justify-between md:items-center gap-6">
+            <div className="space-y-1">
+              <p style={{ color: colors.primary }} className="text-[10px] font-black uppercase tracking-widest">Active Session</p>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">{user.name}</h2>
+              <p className="text-emerald-600/40 text-xs font-medium italic">"Secure node connection established"</p>
+            </div>
+            
+            <button 
+              style={{ backgroundColor: colors.primary }}
+              className="group flex items-center justify-center gap-3 px-8 py-4 text-white rounded-2xl text-sm font-bold transition-all hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95"
+            >
+              <Upload className="w-5 h-5" />
+              Upload New File
+            </button>
+          </div>
+        </BentoCard>
+
+        {/* Navigation Stack - Pure White Buttons */}
+        <div className="md:col-span-2 flex flex-col gap-4">
+          <button className="group flex items-center justify-between p-5 bg-white border border-emerald-500/5 rounded-[1.5rem] transition-all hover:border-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/5 text-left">
             <div className="flex items-center gap-4">
-              <div 
-                className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg"
-                style={{ backgroundColor: colors.primary }}
-              >
-                {user.name.charAt(0)}
+              <div className="p-3 bg-emerald-50/50 rounded-xl text-emerald-600">
+                <UserCircle className="w-5 h-5" />
               </div>
               <div>
-                <p style={{ color: colors.primary }} className="text-[10px] font-bold uppercase tracking-widest mb-0.5">
-                  Root Level Access
-                </p>
-                <h2 className="text-2xl font-black text-zinc-950 tracking-tight">{user.name}</h2>
+                <p className="text-sm font-bold text-slate-900">Manage Account</p>
+                <p className="text-[10px] text-emerald-600/40 font-black uppercase tracking-wider">Settings</p>
               </div>
             </div>
-            <div className="flex gap-2">
-               <button 
-                className="px-4 py-2 text-[10px] font-black text-white rounded-xl transition-all uppercase tracking-widest hover:brightness-110 active:scale-95 shadow-md shadow-emerald-100"
-                style={{ backgroundColor: colors.primary }}
-              >
-                Upload
-              </button>
-              <button 
-                onClick={logout} 
-                className="px-4 py-2 text-[10px] font-black text-zinc-400 hover:text-red-500 bg-zinc-50 rounded-xl transition-all uppercase tracking-widest border border-transparent hover:border-red-100"
-              >
-                Terminate
-              </button>
+            <ArrowRight className="w-4 h-4 text-emerald-500/20 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+          </button>
+
+          <button className="group flex items-center justify-between p-5 bg-white border border-emerald-500/5 rounded-[1.5rem] transition-all hover:border-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/5 text-left">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-emerald-50/50 rounded-xl text-emerald-600">
+                <History className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900">File History</p>
+                <p className="text-[10px] text-emerald-600/40 font-black uppercase tracking-wider">Activity</p>
+              </div>
             </div>
-          </div>
-        </BentoCard>
+            <ArrowRight className="w-4 h-4 text-emerald-500/20 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+          </button>
+        </div>
 
-        {/* System Health Status */}
-        <BentoCard 
-          title="Core Engine Load" 
-          className="md:col-span-2 border-none shadow-2xl shadow-emerald-100/30"
-          style={{ backgroundColor: colors.primary }}
-        >
-          <div className="flex items-end gap-3 text-white">
-            <span className="text-5xl font-black font-mono tracking-tighter">0.042ms</span>
-            <span className="text-emerald-100 text-[10px] font-bold pb-1 uppercase tracking-[0.2em]">
-              Latency
-            </span>
-          </div>
-        </BentoCard>
-
-        {/* The Main File Bank (Full Width) */}
-        <BentoCard title="SPC File Bank - Secure Storage" className="md:col-span-4 bg-white border-zinc-200">
+        {/* File Bank - Removed gray inner background */}
+        <BentoCard title="Your Files" className="md:col-span-6">
+          <div className="bg-white">
             <FileBank role="admin" files={files} />
-        </BentoCard>
-
-        {/* System Activity Logs (Moved to Bottom or Sidebar) */}
-        <BentoCard title="Recent Protocol Logs" className="md:col-span-4 bg-zinc-50/50 border-zinc-100">
-          <div className="space-y-2 font-mono text-[9px]">
-            <div className="flex gap-4 opacity-60">
-              <span className="text-emerald-600 font-bold">[{new Date().toLocaleTimeString()}]</span>
-              <span className="text-zinc-500">ADMIN_ACCESS: File Bank accessed by Root User.</span>
-            </div>
           </div>
         </BentoCard>
 
+        {/* Activity Log - Pure White Accents */}
+        <BentoCard title="Recent Activity" className="md:col-span-6">
+          <div className="space-y-2">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 text-xs p-4 bg-white rounded-xl border border-emerald-500/5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/30" />
+                <p className="text-slate-600">System node verification complete. Logged in as administrator.</p>
+                <span className="ml-auto text-[9px] font-black text-emerald-600/30 uppercase tracking-widest">Live</span>
+              </div>
+            ))}
+          </div>
+        </BentoCard>
       </div>
-    </MainDashboardLayout>
+    </DashboardShell>
   );
 }

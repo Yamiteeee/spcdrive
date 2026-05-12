@@ -33,7 +33,7 @@ export const useMockAuth = () => {
 
     const mockUser: SPCUser = {
       id: role === 'admin' ? '1' : '2',
-      email: role === 'admin' ? 'jason@spc.drive' : 'guest@spc.drive',
+      email: role === 'admin' ? 'jason@test' : 'guest@test',
       name: role === 'admin' ? 'Jason Adrian' : 'Guest User',
       role: role,
     };

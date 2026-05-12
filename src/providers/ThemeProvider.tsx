@@ -1,21 +1,21 @@
 'use client';
 import React, { createContext, useContext, ReactNode } from 'react';
 
-// Define your brand identity here
 export const SPC_THEME = {
   colors: {
-    primary: '#10b981',       // The main Emerald
+    primary: '#10b981',       
     primaryDark: '#059669',
     primaryLight: '#ecfdf5',
-    textMain: '#09090b',      // Zinc 950
-    textMuted: '#71717a',     // Zinc 500
-    background: '#fafafa',    // Zinc 50
-    card: '#ffffff',          // White
-    border: '#e4e4e7',        // Zinc 200
+    danger: '#ef4444',        // <--- New Red for Sign Out / Delete actions
+    textMain: '#09090b',      
+    textMuted: '#71717a',     
+    background: '#f4f4f5',    
+    card: '#ffffff',          
+    border: '#e4e4e7',        
   },
   radius: {
     base: '1rem',
-    large: '2.5rem',          // Your signature SPC curve
+    large: '2.5rem',          
   }
 } as const;
 
@@ -28,7 +28,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         style={{ 
           backgroundColor: SPC_THEME.colors.background,
           color: SPC_THEME.colors.textMain,
-          minHeight: '100vh' 
+          minHeight: '100vh',
         }}
       >
         {children}
