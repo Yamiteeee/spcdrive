@@ -49,12 +49,12 @@ export default function AdminDashboard() {
     >
       <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
         
-        {/* Profile & Upload Action - Pure White */}
+        {/* Profile & Upload Action */}
         <BentoCard className="md:col-span-4">
           <div className="flex flex-col md:flex-row justify-between md:items-center gap-6">
             <div className="space-y-1">
               <p style={{ color: colors.primary }} className="text-[10px] font-black uppercase tracking-widest">Active Session</p>
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight">{user.name}</h2>
+              <h2 className="text-3xl font-black tracking-tight" style={{ color: colors.textMain }}>{user.name}</h2>
               <p className="text-emerald-600/40 text-xs font-medium italic">"Secure node connection established"</p>
             </div>
             
@@ -68,28 +68,28 @@ export default function AdminDashboard() {
           </div>
         </BentoCard>
 
-        {/* Navigation Stack - Pure White Buttons */}
+        {/* Navigation Stack - Fixed canonical rounded-3xl */}
         <div className="md:col-span-2 flex flex-col gap-4">
-          <button className="group flex items-center justify-between p-5 bg-white border border-emerald-500/5 rounded-[1.5rem] transition-all hover:border-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/5 text-left">
+          <button className="group flex items-center justify-between p-5 bg-white border border-emerald-500/5 rounded-3xl transition-all hover:border-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/5 text-left">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-emerald-50/50 rounded-xl text-emerald-600">
                 <UserCircle className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900">Manage Account</p>
+                <p className="text-sm font-bold" style={{ color: colors.textMain }}>Manage Account</p>
                 <p className="text-[10px] text-emerald-600/40 font-black uppercase tracking-wider">Settings</p>
               </div>
             </div>
             <ArrowRight className="w-4 h-4 text-emerald-500/20 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
           </button>
 
-          <button className="group flex items-center justify-between p-5 bg-white border border-emerald-500/5 rounded-[1.5rem] transition-all hover:border-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/5 text-left">
+          <button className="group flex items-center justify-between p-5 bg-white border border-emerald-500/5 rounded-3xl transition-all hover:border-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/5 text-left">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-emerald-50/50 rounded-xl text-emerald-600">
                 <History className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900">File History</p>
+                <p className="text-sm font-bold" style={{ color: colors.textMain }}>File History</p>
                 <p className="text-[10px] text-emerald-600/40 font-black uppercase tracking-wider">Activity</p>
               </div>
             </div>
@@ -97,14 +97,14 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {/* File Bank - Removed gray inner background */}
+        {/* File Bank */}
         <BentoCard title="Your Files" className="md:col-span-6">
           <div className="bg-white">
             <FileBank role="admin" files={files} />
           </div>
         </BentoCard>
 
-        {/* Activity Log - Pure White Accents */}
+        {/* Activity Log */}
         <BentoCard title="Recent Activity" className="md:col-span-6">
           <div className="space-y-2">
             {[...Array(2)].map((_, i) => (
