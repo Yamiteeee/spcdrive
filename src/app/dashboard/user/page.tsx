@@ -2,8 +2,8 @@
 
 import { useUserDashboard } from '@/hooks/useUserDashboard';
 import { useSearch } from '@/hooks/useSearch';
-import { BentoCard } from '@/components/BentoCard';
-import { DashboardShell } from '@/components/DashboardShell';
+import { BentoCard } from '@/components/ui/BentoCard';
+import { DashboardShell } from '@/components/shells/DashboardShell';
 import { useSPCTheme } from '@/providers/ThemeProvider';
 import { FileBank } from '@/components/FileBank';
 import { Loader2, ShieldCheck } from 'lucide-react';
