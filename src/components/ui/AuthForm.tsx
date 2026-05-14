@@ -1,7 +1,9 @@
 'use client';
+import React from 'react';
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 import { useSPCTheme } from '@/providers/ThemeProvider';
 
+// 1. Re-defining the Interface that was missing
 interface AuthFormProps {
   title: string;
   subtitle: string;
@@ -28,21 +30,19 @@ export function AuthForm({
     <div 
       className="backdrop-blur-xl border p-10 shadow-2xl transition-all"
       style={{ 
-        backgroundColor: `${colors.card}25`, // 15% opacity card color for glass effect
+        backgroundColor: `${colors.card}25`, 
         borderColor: `${colors.card}30`,
         borderRadius: radius.large 
       }}
     >
-      {/* Header Section */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-black tracking-tight" style={{ color: colors.card }}>
+        <h1 className="text-3xl font-black tracking-tight" style={{ color: colors.textMain }}>
           {title}
         </h1>
-        <p className="text-sm mt-2 opacity-70" style={{ color: colors.card }}>
+        <p className="text-sm mt-2 opacity-70" style={{ color: colors.textMain }}>
           {subtitle}
         </p>
         
-        {/* Error State linked to colors.danger */}
         {error && (
           <div 
             className="border rounded-xl py-2 px-4 mt-4 animate-in shake-1"
@@ -51,7 +51,7 @@ export function AuthForm({
               borderColor: `${colors.danger}50` 
             }}
           >
-            <p className="text-xs font-bold" style={{ color: colors.card }}>
+            <p className="text-xs font-bold" style={{ color: colors.textMain }}>
               {error}
             </p>
           </div>
@@ -59,9 +59,8 @@ export function AuthForm({
       </div>
 
       <div className="space-y-5">
-        {/* Identity / Email Input */}
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 opacity-50" style={{ color: colors.card }}>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 opacity-50" style={{ color: colors.textMain }}>
             Identity
           </label>
           <div className="relative">
@@ -75,17 +74,16 @@ export function AuthForm({
               className="w-full pl-11 pr-4 py-4 border focus:outline-none transition-all font-medium" 
               style={{ 
                 backgroundColor: colors.card,
-                color: colors.textMain,
-                borderColor: `${colors.card}10`,
+                color: '#09090b', // Keep text dark for white inputs
+                borderColor: colors.border,
                 borderRadius: radius.base,
               }}
             />
           </div>
         </div>
 
-        {/* Security Key / Password Input */}
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 opacity-50" style={{ color: colors.card }}>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 opacity-50" style={{ color: colors.textMain }}>
             Security Key
           </label>
           <div className="relative">
@@ -99,37 +97,34 @@ export function AuthForm({
               className="w-full pl-11 pr-4 py-4 border focus:outline-none transition-all font-medium" 
               style={{ 
                 backgroundColor: colors.card,
-                color: colors.textMain,
-                borderColor: `${colors.card}10`,
+                color: '#09090b', 
+                borderColor: colors.border,
                 borderRadius: radius.base,
               }}
             />
           </div>
         </div>
 
-        {/* Submit Action Button */}
         <button 
           onClick={onAuth} 
           disabled={loading} 
           className="w-full flex items-center justify-center gap-2 font-black py-4 shadow-lg transition-all active:scale-[0.97] disabled:opacity-50 mt-4"
           style={{ 
             backgroundColor: colors.primary,
-            color: colors.card, // White text on emerald button
+            color: colors.buttonText,
             borderRadius: radius.base
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.primaryDark}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.primary}
         >
           {loading ? (
-            <Loader2 className="h-5 w-5 animate-spin" style={{ color: colors.card }} />
+            <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
-            <>{submitLabel} <ArrowRight className="h-4 w-4" style={{ color: colors.card }} /></>
+            <>{submitLabel} <ArrowRight className="h-4 w-4" /></>
           )}
         </button>
       </div>
 
       {footerAction && (
-        <div className="mt-8 text-center" style={{ color: colors.card }}>
+        <div className="mt-8 text-center" style={{ color: colors.textMain }}>
           {footerAction}
         </div>
       )}
