@@ -8,6 +8,7 @@ import { useSearch } from '@/hooks/useSearch';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { useFileManagement } from '@/hooks/useFileManagement';
 import { useSPCTheme } from '@/providers/ThemeProvider';
+import { useDownloadFile } from '@/hooks/useDownloadFile'; // 🌟 EDIT 1: Import your new hook
 
 // UI Components
 import { Button } from '@/components/ui/Button';
@@ -19,7 +20,6 @@ import { UserManagement } from '@/components/UserManagement';
 import { DownloadHistory } from '@/components/DownloadHistory';
 
 // Utilities & Data
-import { MOCK_LOGS } from '@/lib/mock-data';
 import { 
   Upload, UserCircle, Download, ArrowRight, 
   LayoutDashboard, Loader2 
@@ -35,10 +35,12 @@ export default function AdminDashboard() {
   const userManager = useUserManagement();
   const fileManager = useFileManagement();
   
+  // 🌟 EDIT 2: Initialize your new downloader hook mechanics
+  const { downloadAsset } = useDownloadFile(); 
+  
   const [isProcessingUpload, setIsProcessingUpload] = useState(false);
 
   // 2. Search & Filtering Logic
-  // Connect search specifically to the fileManager state
   const { 
     query: searchQuery, 
     setQuery: setSearchQuery, 
@@ -66,7 +68,6 @@ export default function AdminDashboard() {
   // 4. Action Handlers
   const handleUpload = async (file: File) => {
     setIsProcessingUpload(true);
-    // Artificial delay to simulate "Encryption & Upload" protocol
     setTimeout(() => {
       fileManager.uploadFile(file);
       setIsProcessingUpload(false);
@@ -156,15 +157,12 @@ export default function AdminDashboard() {
             <BentoCard title="Operative Repository">
               <FileBank 
                 role="admin" 
-                files={filteredFiles} // Connects to useSearch
+                files={filteredFiles}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 onUpdate={fileManager.updateFile}
                 onDelete={fileManager.deleteFile}
-                onDownload={(file: any) => {
-                  console.log(`RETRIEVING_DATA: ${file.id}`);
-                  alert(`Initializing secure download for: ${file.name}`);
-                }}
+                onDownload={downloadAsset} // 🌟 EDIT 3: Connect your clean hook download function directly!
               />
             </BentoCard>
           ) : dash.activeView === 'users' ? (
@@ -179,7 +177,7 @@ export default function AdminDashboard() {
               onSave={userManager.updateUserDetails}
             />
           ) : (
-            <DownloadHistory logs={MOCK_LOGS} />
+            <DownloadHistory />
           )}
         </div>
       </div>

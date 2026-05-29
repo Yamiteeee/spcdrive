@@ -18,11 +18,14 @@ export interface DashboardShellProps {
 }
 
 // Data Models
+
+// 1. Fixed: Only one clean FileItem declaration containing the url property
 export interface FileItem {
   id: string;
   name: string;
   size: string;
   type: string;
+  url: string;        
   updatedAt: string;
 }
 
@@ -35,6 +38,7 @@ export interface DownloadLog {
   status: 'verified' | 'failed';
 }
 
+// 2. Restored: UserManagementData is back so your user hooks can read it!
 export interface UserManagementData {
   id: string;
   name: string;
