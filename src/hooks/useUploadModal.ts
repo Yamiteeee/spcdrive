@@ -8,30 +8,40 @@ export function useUploadModal(onSuccess?: (file: FileItem) => void) {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const open = () => setIsOpen(true);
+  
+  // Guard clause to prevent users from closing the modal while a file is uploading
   const close = () => {
     if (!isProcessing) setIsOpen(false);
   };
 
-  const handleUpload = async (rawFile: File) => {
-    setIsProcessing(true);
+  /**
+   * Handles the modal upload lifecycle.
+   * @param rawFile The physical file object from the HTML input element.
+   * @param uploadAction The live async upload function provided by your data hooks.
+   */
+  const handleUpload = async (
+    rawFile: File, 
+    uploadAction: (file: File) => Promise<FileItem | void>
+  ) => {
+    try {
+      setIsProcessing(true);
 
-    // 1. Simulate the "Secure Processing" delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Execute the live Supabase storage and database upload function passed from the parent hook
+      const uploadedFile = await uploadAction(rawFile);
 
-    // 2. Transform raw File into our System's FileItem type
-    const newFile: FileItem = {
-      id: Math.random().toString(36).substring(2, 11),
-      name: rawFile.name,
-      size: (rawFile.size / (1024 * 1024)).toFixed(1) + ' MB',
-      type: rawFile.name.split('.').pop()?.toUpperCase() || 'FILE',
-      updatedAt: new Date().toISOString().split('T')[0],
-    };
+      // If the action returned a valid database record, pass it up to update the UI tables
+      if (uploadedFile && onSuccess) {
+        onSuccess(uploadedFile);
+      }
 
-    // 3. Callback to update the parent's file list
-    if (onSuccess) onSuccess(newFile);
-
-    setIsProcessing(false);
-    return newFile;
+      // Automatically close the modal panel upon a successful upload transaction
+      setIsOpen(false);
+      return uploadedFile;
+    } catch (err) {
+      console.error('Modal execution lifecycle failed:', err);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return {

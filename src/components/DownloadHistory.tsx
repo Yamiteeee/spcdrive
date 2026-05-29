@@ -1,16 +1,16 @@
 'use client';
-import { User, FileText, Globe, Clock } from 'lucide-react';
+
+import { User, FileText, Globe, Clock, RefreshCw } from 'lucide-react';
 import { BentoCard } from '@/components/ui/BentoCard';
 import { Table } from '@/components/ui/Table';
 import { DownloadLog } from '@/types/dashboard';
 import { useSPCTheme } from '@/providers/ThemeProvider';
+import { useDownloadHistory } from '@/hooks/useDownloadHistory'; // Import your live hook
 
-interface DownloadHistoryProps {
-  logs: DownloadLog[];
-}
-
-export function DownloadHistory({ logs }: DownloadHistoryProps) {
+export function DownloadHistory() {
   const { colors } = useSPCTheme();
+  // ✨ Pull the live database stream and tracking states directly into the component
+  const { logs, loading, error, refreshLogs } = useDownloadHistory();
 
   const columns = [
     {
@@ -66,6 +66,56 @@ export function DownloadHistory({ logs }: DownloadHistoryProps) {
     }
   ];
 
+  // 1. Live Database Loading State Skeleton View
+  if (loading && logs.length === 0) {
+    return (
+      <BentoCard title="Download Documentation" className="md:col-span-6">
+        <div 
+          className="flex flex-col items-center justify-center rounded-lg border border-dashed"
+          style={{ 
+            borderColor: colors.border, 
+            backgroundColor: `${colors.background}80`,
+            height: '200px' // ✨ Fixed layout compiled height assignment rule
+          }}
+        >
+          <RefreshCw className="w-5 h-5 animate-spin mb-2" style={{ color: colors.primary }} />
+          <p className="text-[11px] font-mono uppercase tracking-wider" style={{ color: colors.textMuted }}>
+            Synchronizing Audit Logs...
+          </p>
+        </div>
+      </BentoCard>
+    );
+  }
+
+  // 2. Database Policy / Error Catch View
+  if (error) {
+    return (
+      <BentoCard title="Download Documentation" className="md:col-span-6">
+        <div 
+          className="flex flex-col items-center justify-center rounded-lg border text-center p-4"
+          style={{ 
+            borderColor: colors.border, 
+            backgroundColor: colors.background,
+            height: '200px' // ✨ Fixed layout compiled height assignment rule
+          }}
+        >
+          <span className="text-[10px] font-mono text-red-500 mb-1">⚠️ AUDIT_LOG_STREAM_EXCEPTION</span>
+          <p className="text-xs font-medium max-w-xs mb-3" style={{ color: colors.textMain }}>
+            {error}
+          </p>
+          <button
+            onClick={() => refreshLogs()}
+            className="px-3 py-1 rounded text-[10px] font-bold uppercase tracking-tight transition-all"
+            style={{ backgroundColor: colors.primary, color: colors.background }}
+          >
+            Retry Connection
+          </button>
+        </div>
+      </BentoCard>
+    );
+  }
+
+  // 3. Complete Data Render View
   return (
     <BentoCard title="Download Documentation" className="md:col-span-6">
       <Table data={logs} columns={columns} />
