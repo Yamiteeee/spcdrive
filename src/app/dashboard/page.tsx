@@ -9,9 +9,13 @@ import { useFileManagement } from '@/hooks/useFileManagement';
 import { useSPCTheme } from '@/providers/ThemeProvider';
 import { useDownloadFile } from '@/hooks/useDownloadFile'; 
 import { useUserApproval } from '@/hooks/useUserApproval'; 
-import { useCategoryManagement } from '@/hooks/useCategoryManagement'; // 🌟 1. Imported the category hook
+import { useCategoryManagement } from '@/hooks/useCategoryManagement'; 
 import { createClient } from '@/utils/supabase/client'; 
 import { UserManagementData } from '@/types/dashboard';
+
+// Dynamic Animations Framework Layout
+import { AnimatePresence } from 'framer-motion';
+import { PageTransition } from '@/components/ui/PageTransition';
 
 // UI Components
 import { Button } from '@/components/ui/Button';
@@ -43,7 +47,7 @@ export default function AdminDashboard() {
 
   const dash = useAdminDashboard();
   const fileManager = useFileManagement();
-  const categoryManager = useCategoryManagement(); // 🌟 2. Instantiated category tracking state
+  const categoryManager = useCategoryManagement(); 
   const { downloadAsset } = useDownloadFile(); 
   const [isProcessingUpload, setIsProcessingUpload] = useState(false);
 
@@ -110,11 +114,9 @@ export default function AdminDashboard() {
     );
   }
 
-  // UPGRADED TO ACCEPT THE TARGET CATEGORY NAME OVER THE TRANSIT PAYLOAD
   const handleUpload = async (files: File[], category: string) => {
     setIsProcessingUpload(true);
     try {
-      // Dispatch upload transfers concurrently, packing the designated category metadata wrapper
       await Promise.all(
         files.map(async (file) => {
           return await fileManager.uploadFile(file, category);
@@ -202,30 +204,43 @@ export default function AdminDashboard() {
           })}
         </div>
 
+        {/* 🌟 CRITICAL ANIMATION LAYER INJECTION POINT */}
         <div className="md:col-span-6">
-          {dash.activeView === 'files' ? (
-            <BentoCard title="Operative Repository">
-              <FileBank 
-                role="admin" 
-                files={fileSearch.filteredData}
-                searchQuery={fileSearch.query}
-                setSearchQuery={fileSearch.setQuery}
-                onUpdate={fileManager.updateFile}
-                onDelete={fileManager.deleteFile}
-                onDownload={downloadAsset} 
-              />
-            </BentoCard>
-          ) : dash.activeView === 'users' ? (
-            <UserManagement 
-              users={userSearch.filteredData}
-              onApprove={approval.openApproval}
-              onToggleStatus={userManager.toggleStatus}
-              onEdit={userManager.openEdit}
-              onPasswordResetTrigger={(user: UserManagementData) => setResettingPasswordUser(user)}
-            />
-          ) : (
-            <DownloadHistory />
-          )}
+          <AnimatePresence mode="wait">
+            {dash.activeView === 'files' && (
+              <PageTransition key="files-view">
+                <BentoCard title="Operative Repository">
+                  <FileBank 
+                    role="admin" 
+                    files={fileSearch.filteredData}
+                    searchQuery={fileSearch.query}
+                    setSearchQuery={fileSearch.setQuery}
+                    onUpdate={fileManager.updateFile}
+                    onDelete={fileManager.deleteFile}
+                    onDownload={downloadAsset} 
+                  />
+                </BentoCard>
+              </PageTransition>
+            )}
+
+            {dash.activeView === 'users' && (
+              <PageTransition key="users-view">
+                <UserManagement 
+                  users={userSearch.filteredData}
+                  onApprove={approval.openApproval}
+                  onToggleStatus={userManager.toggleStatus}
+                  onEdit={userManager.openEdit}
+                  onPasswordResetTrigger={(user: UserManagementData) => setResettingPasswordUser(user)}
+                />
+              </PageTransition>
+            )}
+
+            {dash.activeView === 'history' && (
+              <PageTransition key="history-view">
+                <DownloadHistory />
+              </PageTransition>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -235,7 +250,7 @@ export default function AdminDashboard() {
         isProcessing={isProcessingUpload}
         onClose={() => dash.toggleUpload(false)} 
         onUpload={handleUpload} 
-        categories={categoryManager.categories} // 🌟 3. Connected the categories prop stream down smoothly
+        categories={categoryManager.categories} 
       />
 
       {/* Profile Identity Remap Modification Management Modal Layer */}
