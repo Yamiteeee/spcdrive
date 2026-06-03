@@ -16,27 +16,36 @@ export function useAuthForm() {
   const handleAuth = async (): Promise<void> => {
     setLocalError(null);
     
-    // 1. Client-Side Validation Guards
     const cleanEmail = email.trim();
     const cleanPassword = password.trim();
+
+    // 🌟 FALLBACK: If React state is caught in a stale closure, grab it directly from the DOM input element
+    let finalName = name.trim();
+    if (!isLogin && !finalName && typeof document !== 'undefined') {
+      const nameInput = document.querySelector('input[placeholder="e.g., Agent Don"]') as HTMLInputElement;
+      if (nameInput && nameInput.value) {
+        finalName = nameInput.value.trim();
+      }
+    }
+
+    console.log("System Auth Diagnostics:", { isLogin, cleanEmail, finalName });
 
     if (!cleanEmail || !cleanPassword) {
       setLocalError("Please fill out all required authentication fields.");
       return;
     }
 
-    if (!isLogin && !name.trim()) {
+    if (!isLogin && !finalName) {
       setLocalError("An operations identity name is required for registration.");
       return;
     }
 
     try {
       if (isLogin) {
-        // Execute the cache-purged login engine stream
         await login(cleanEmail, cleanPassword);
       } else {
-        // Pass clean parameters for fresh account registration
-        await signUp(cleanEmail, cleanPassword, name.trim());
+        // Pass the guaranteed extracted final name parameters safely
+        await signUp(cleanEmail, cleanPassword, finalName);
       }
     } catch (err: any) {
       console.error("Critical Exception during Form Submission:", err);
@@ -55,14 +64,12 @@ export function useAuthForm() {
     setLocalError(null);
     setTimeout(() => {
       setIsLogin((p) => !p);
-      // Clean sensitive credentials dynamically across mode swaps
       setPassword('');
-      setName('');
+      // 🌟 REMOVED: setName(''); to stop it from wiping data out during state sync bumps
       setSwitching(false);
     }, 200);
   };
 
-  // Combine hook errors and local client-side validation errors seamlessly
   const displayError = localError || authError;
 
   return {
@@ -75,7 +82,7 @@ export function useAuthForm() {
     setName,
     switching, 
     loading, 
-    error: displayError, // Binds unified errors right to your UI alert display components
+    error: displayError, 
     handleAuth, 
     toggleMode, 
     handleKeyDown

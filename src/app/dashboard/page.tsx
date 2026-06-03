@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMockAuth } from '@/hooks/useMockAuth';
 import { useAdminDashboard } from '@/hooks/useAdminDashboard';
 import { useSearch } from '@/hooks/useSearch';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { useFileManagement } from '@/hooks/useFileManagement';
 import { useSPCTheme } from '@/providers/ThemeProvider';
-import { useDownloadFile } from '@/hooks/useDownloadFile'; // 🌟 EDIT 1: Import your new hook
+import { useDownloadFile } from '@/hooks/useDownloadFile'; 
+import { useUserApproval } from '@/hooks/useUserApproval'; 
+import { createClient } from '@/utils/supabase/client'; 
+import { UserManagementData } from '@/types/dashboard';
 
 // UI Components
 import { Button } from '@/components/ui/Button';
@@ -18,46 +20,87 @@ import { FileBank } from '@/components/FileBank';
 import { UploadModal } from '@/components/UploadModal';
 import { UserManagement } from '@/components/UserManagement';
 import { DownloadHistory } from '@/components/DownloadHistory';
+import { UserApprovalModal } from '@/components/UserApprovalModal'; 
+import { UpdatePasswordModal } from '@/components/UpdatePasswordModal'; 
+import { UpdateUserModal } from '@/components/UpdateUserModal';
 
-// Utilities & Data
 import { 
   Upload, UserCircle, Download, ArrowRight, 
   LayoutDashboard, Loader2 
 } from 'lucide-react';
 
 export default function AdminDashboard() {
-  // 1. Hook Initializations
-  const { user, logout, loading } = useMockAuth();
   const { colors, radius } = useSPCTheme();
   const router = useRouter();
+  const supabase = createClient();
   
+  const [currentUserProfile, setCurrentUserProfile] = useState<{name: string; role: string} | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  // Local state tracking for the focused password target record
+  const [resettingPasswordUser, setResettingPasswordUser] = useState<UserManagementData | null>(null);
+
   const dash = useAdminDashboard();
-  const userManager = useUserManagement();
   const fileManager = useFileManagement();
-  
-  // 🌟 EDIT 2: Initialize your new downloader hook mechanics
   const { downloadAsset } = useDownloadFile(); 
-  
   const [isProcessingUpload, setIsProcessingUpload] = useState(false);
 
-  // 2. Search & Filtering Logic
-  const { 
-    query: searchQuery, 
-    setQuery: setSearchQuery, 
-    filteredData: filteredFiles 
-  } = useSearch(fileManager.files, ['name', 'type']);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const fileSearch = useSearch(fileManager.files, ['name', 'type']);
+
+  const userManager = useUserManagement({
+    query: userSearchQuery,
+    setQuery: setUserSearchQuery
+  });
 
   const userSearch = useSearch(userManager.users, ['name', 'email']);
 
-  // 3. Auth Guard
-  useEffect(() => {
-    if (!loading) {
-      if (!user) router.push('/dashboard/auth');
-      else if (user.role !== 'admin') router.push('/dashboard/user');
-    }
-  }, [user, loading, router]);
+  // Initialize administrative user access approval logic states
+  const approval = useUserApproval({
+    allUsers: userManager.users,
+    filteredUsers: userSearch.filteredData,
+    onConfirmApprove: userManager.approveUser
+  });
 
-  if (!user || loading || user.role !== 'admin') {
+  useEffect(() => {
+    async function verifyAdminSession() {
+      try {
+        setIsAuthLoading(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          router.push('/dashboard/auth');
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name, role')
+          .eq('id', user.id)
+          .single();
+
+        if (!profile || profile.role !== 'admin') {
+          router.push('/dashboard/user');
+          return;
+        }
+
+        setCurrentUserProfile(profile);
+      } catch (err) {
+        router.push('/dashboard/auth');
+      } finally {
+        setIsAuthLoading(false);
+      }
+    }
+    
+    verifyAdminSession();
+  }, [router, supabase]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/dashboard/auth');
+  };
+
+  if (isAuthLoading || !currentUserProfile) {
     return (
       <div className="flex flex-col items-center justify-center h-screen" style={{ backgroundColor: colors.background }}>
         <Loader2 className="w-10 h-10 animate-spin" style={{ color: colors.primary }} />
@@ -65,7 +108,6 @@ export default function AdminDashboard() {
     );
   }
 
-  // 4. Action Handlers
   const handleUpload = async (file: File) => {
     setIsProcessingUpload(true);
     setTimeout(() => {
@@ -79,12 +121,11 @@ export default function AdminDashboard() {
     <DashboardShell 
       title={dash.activeView === 'files' ? "File Manager" : dash.activeView === 'users' ? "User Management" : "System Logs"} 
       role="Administrator" 
-      userName={user.name} 
-      onLogout={logout}
+      userName={currentUserProfile.name} 
+      onLogout={handleLogout}
     >
       <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
         
-        {/* --- PROFILE & PRIMARY ACTION CARD --- */}
         <BentoCard className="md:col-span-4">
           <div className="flex flex-col md:flex-row justify-between md:items-center gap-6">
             <div className="space-y-3">
@@ -95,7 +136,7 @@ export default function AdminDashboard() {
                 </p>
               </div>
               <h2 className="text-3xl font-black tracking-tight" style={{ color: colors.textMain }}>
-                {user.name}
+                {currentUserProfile.name}
               </h2>
             </div>
             
@@ -109,7 +150,6 @@ export default function AdminDashboard() {
           </div>
         </BentoCard>
 
-        {/* --- NAVIGATION STACK --- */}
         <div className="md:col-span-2 flex flex-col gap-4">
           {[
             { id: 'users', label: 'Accounts', sub: 'DIRECTORY', icon: UserCircle },
@@ -151,30 +191,27 @@ export default function AdminDashboard() {
           })}
         </div>
 
-        {/* --- DYNAMIC CONTENT AREA --- */}
         <div className="md:col-span-6">
           {dash.activeView === 'files' ? (
             <BentoCard title="Operative Repository">
               <FileBank 
                 role="admin" 
-                files={filteredFiles}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
+                files={fileSearch.filteredData}
+                searchQuery={fileSearch.query}
+                setSearchQuery={fileSearch.setQuery}
                 onUpdate={fileManager.updateFile}
                 onDelete={fileManager.deleteFile}
-                onDownload={downloadAsset} // 🌟 EDIT 3: Connect your clean hook download function directly!
+                onDownload={downloadAsset} 
               />
             </BentoCard>
           ) : dash.activeView === 'users' ? (
+            /* 🌟 Perfectly Cleaned, Modular User Directory List Presentation Layer */
             <UserManagement 
               users={userSearch.filteredData}
-              isEditing={userManager.isEditing}
-              selectedUser={userManager.selectedUser}
-              onApprove={userManager.approveUser}
+              onApprove={approval.openApproval}
               onToggleStatus={userManager.toggleStatus}
               onEdit={userManager.openEdit}
-              onCloseEdit={userManager.closeEdit}
-              onSave={userManager.updateUserDetails}
+              onPasswordResetTrigger={(user: UserManagementData) => setResettingPasswordUser(user)}
             />
           ) : (
             <DownloadHistory />
@@ -182,12 +219,44 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* --- GLOBALS --- */}
-      <UploadModal 
-        isOpen={dash.isUploadOpen} 
-        isProcessing={isProcessingUpload}
-        onClose={() => dash.toggleUpload(false)} 
-        onUpload={handleUpload} 
+      {/* Asset Repository Upload Overlay Component Framework */}
+   {/* 🌟 Update this specific block around line 224 */}
+        <UploadModal 
+          isOpen={dash.isUploadOpen} 
+          isProcessing={isProcessingUpload}
+          onClose={() => dash.toggleUpload(false)} 
+          onUpload={handleUpload} 
+        />
+
+      {/* 🌟 Profile Identity Remap Modification Management Modal Layer */}
+      <UpdateUserModal 
+        isOpen={userManager.isEditing} 
+        onClose={userManager.closeEdit}
+        user={userManager.formData} 
+        formData={userManager.formData}
+        setFormData={userManager.setFormData}
+        onConfirmUpdate={async () => {
+          await userManager.commitChanges();
+        }}
+        isProcessing={userManager.isActionProcessing}
+      />
+
+      {/* Account Verification & Registration Authorization Review Modal Layer */}
+      <UserApprovalModal 
+        isOpen={approval.isOpen}
+        onClose={approval.closeApproval}
+        user={approval.approvingUser}
+        onConfirmApprove={userManager.approveUser}
+        isProcessing={userManager.isActionProcessing}
+      />
+
+      {/* Access Keys and Security Credentials Modification Modal Layer */}
+      <UpdatePasswordModal 
+        isOpen={resettingPasswordUser !== null}
+        onClose={() => setResettingPasswordUser(null)}
+        user={resettingPasswordUser}
+        onConfirmPasswordReset={userManager.updateUserPassword}
+        isProcessing={userManager.isActionProcessing}
       />
     </DashboardShell>
   );

@@ -10,6 +10,9 @@ function AuthContent() {
   const [loaded, setLoaded] = useState<boolean>(false);
   const form = useAuthForm();
   const theme = useSPCTheme();
+  
+  // 🌟 Instantiate local state tracking for registration names
+  const [name, setName] = useState('');
 
   useEffect(() => {
     setLoaded(true);
@@ -17,7 +20,7 @@ function AuthContent() {
 
   return (
     /* We use bg-transparent here to ensure the 
-       ThemeProvider doesn't block the Image 
+        ThemeProvider doesn't block the Image 
     */
     <main 
       className="relative min-h-screen flex items-center justify-center px-6 font-sans overflow-hidden bg-transparent"
@@ -49,6 +52,8 @@ function AuthContent() {
           setEmail={form.setEmail}
           password={form.password}
           setPassword={form.setPassword}
+          name={name}        // 🌟 Binds your new local string state variable
+          setName={setName}  // 🌟 Binds your new React state state dispatcher hook
           loading={form.loading}
           error={form.error}
           switching={form.switching}

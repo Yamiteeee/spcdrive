@@ -18,8 +18,10 @@ export interface AuthCardProps {
   isLogin: boolean;
   email: string;
   setEmail: (val: string) => void;
-  password: string;
+  password: string; // 🌟 ADDED NAME STATE CAPABILITIES BELOW:
   setPassword: (val: string) => void;
+  name: string;               
+  setName: (val: string) => void; 
   loading: boolean;
   error: string | null;
   switching: boolean;

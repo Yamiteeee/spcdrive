@@ -1,9 +1,8 @@
 'use client';
 import React from 'react';
-import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, User } from 'lucide-react';
 import { useSPCTheme } from '@/providers/ThemeProvider';
 
-// 1. Re-defining the Interface that was missing
 interface AuthFormProps {
   title: string;
   subtitle: string;
@@ -15,6 +14,8 @@ interface AuthFormProps {
   setEmail: (val: string) => void;
   password: string;
   setPassword: (val: string) => void;
+  name: string;                  
+  setName: (val: string) => void;  
   onKeyDown?: (e: React.KeyboardEvent) => void;
   footerAction?: React.ReactNode;
 }
@@ -22,9 +23,12 @@ interface AuthFormProps {
 export function AuthForm({
   title, subtitle, error, loading, submitLabel, 
   onAuth, email, setEmail, password, setPassword, 
-  onKeyDown, footerAction 
+  name, setName, onKeyDown, footerAction 
 }: AuthFormProps) {
   const { colors, radius } = useSPCTheme();
+
+  // Determine if it is a registration screen based on systemic keywords
+  const isRegisterScreen = submitLabel.includes('INITIALIZE') || title.toLowerCase().includes('join');
 
   return (
     <div 
@@ -35,6 +39,7 @@ export function AuthForm({
         borderRadius: radius.large 
       }}
     >
+      {/* --- HEADER BLOCK --- */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-black tracking-tight" style={{ color: colors.textMain }}>
           {title}
@@ -58,7 +63,37 @@ export function AuthForm({
         )}
       </div>
 
+      {/* --- INPUT STACK --- */}
       <div className="space-y-5">
+        
+        {/* 🌟 1. IDENTITY NAME FIELD (Only visible when creating an account) */}
+        {isRegisterScreen && (
+          <div className="space-y-2 animate-in fade-in duration-300">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 opacity-50" style={{ color: colors.textMain }}>
+              Operations Identity Name
+            </label>
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: colors.primary }} />
+              <input 
+                type="text" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                onKeyDown={onKeyDown}
+                placeholder="e.g., Agent Don" 
+                required
+                className="w-full pl-11 pr-4 py-4 border focus:outline-none transition-all font-medium" 
+                style={{ 
+                  backgroundColor: colors.card,
+                  color: '#09090b', 
+                  borderColor: colors.border,
+                  borderRadius: radius.base,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* 🔑 2. EMAIL IDENTITY FIELD (Always visible) */}
         <div className="space-y-2">
           <label className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 opacity-50" style={{ color: colors.textMain }}>
             Identity
@@ -74,7 +109,7 @@ export function AuthForm({
               className="w-full pl-11 pr-4 py-4 border focus:outline-none transition-all font-medium" 
               style={{ 
                 backgroundColor: colors.card,
-                color: '#09090b', // Keep text dark for white inputs
+                color: '#09090b', 
                 borderColor: colors.border,
                 borderRadius: radius.base,
               }}
@@ -82,6 +117,7 @@ export function AuthForm({
           </div>
         </div>
 
+        {/* 🔒 3. SECURITY KEY FIELD (Always visible) */}
         <div className="space-y-2">
           <label className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 opacity-50" style={{ color: colors.textMain }}>
             Security Key
@@ -105,6 +141,7 @@ export function AuthForm({
           </div>
         </div>
 
+        {/* --- SYSTEM TRIGGER ACTION BUTTON --- */}
         <button 
           onClick={onAuth} 
           disabled={loading} 
@@ -123,6 +160,7 @@ export function AuthForm({
         </button>
       </div>
 
+      {/* --- FOOTER CARD REDIRECT --- */}
       {footerAction && (
         <div className="mt-8 text-center" style={{ color: colors.textMain }}>
           {footerAction}
