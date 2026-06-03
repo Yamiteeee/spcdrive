@@ -5,11 +5,11 @@ import { BentoCard } from '@/components/ui/BentoCard';
 import { Table } from '@/components/ui/Table';
 import { DownloadLog } from '@/types/dashboard';
 import { useSPCTheme } from '@/providers/ThemeProvider';
-import { useDownloadHistory } from '@/hooks/useDownloadHistory'; // Import your live hook
+import { useDownloadHistory } from '@/hooks/useDownloadHistory'; 
 
 export function DownloadHistory() {
   const { colors } = useSPCTheme();
-  // ✨ Pull the live database stream and tracking states directly into the component
+  // Pull the live database stream and tracking states directly into the component
   const { logs, loading, error, refreshLogs } = useDownloadHistory();
 
   const columns = [
@@ -75,7 +75,7 @@ export function DownloadHistory() {
           style={{ 
             borderColor: colors.border, 
             backgroundColor: `${colors.background}80`,
-            height: '200px' // ✨ Fixed layout compiled height assignment rule
+            height: '200px' 
           }}
         >
           <RefreshCw className="w-5 h-5 animate-spin mb-2" style={{ color: colors.primary }} />
@@ -96,7 +96,7 @@ export function DownloadHistory() {
           style={{ 
             borderColor: colors.border, 
             backgroundColor: colors.background,
-            height: '200px' // ✨ Fixed layout compiled height assignment rule
+            height: '200px' 
           }}
         >
           <span className="text-[10px] font-mono text-red-500 mb-1">⚠️ AUDIT_LOG_STREAM_EXCEPTION</span>
@@ -118,36 +118,44 @@ export function DownloadHistory() {
   // 3. Complete Data Render View
   return (
     <BentoCard title="Download Documentation" className="md:col-span-6">
-      <Table data={logs} columns={columns} />
-      
-      {/* Specific Domain Footer */}
-      <div 
-        className="mt-6 pt-6 border-t flex items-center justify-between"
-        style={{ borderColor: colors.border }}
-      >
-        <p 
-          className="text-[9px] font-black uppercase tracking-widest"
-          style={{ color: `${colors.primary}66` }} // 40% primary green
-        >
-          Autosave: Documentation_Protocol_v4.log
-        </p>
+      {/* 🌟 FIX: Outer Flexbox engine combined with an explicit scroll viewport container */}
+      <div className="flex flex-col h-full space-y-4">
         
-        <div className="flex items-center gap-2">
-          {/* Live Status Indicator */}
-          <div 
-            className="w-2 h-2 rounded-full animate-pulse" 
-            style={{ 
-              backgroundColor: colors.primary,
-              boxShadow: `0 0 8px ${colors.primary}` 
-            }} 
-          />
-          <span 
-            className="text-[9px] font-bold uppercase tracking-tighter"
-            style={{ color: colors.textMuted }}
-          >
-            Live Audit Active
-          </span>
+        {/* Scrollable table bounding viewport */}
+        <div className="grow overflow-y-auto max-h-105 pr-2 custom-scrollbar">
+          <Table data={logs} columns={columns} />
         </div>
+        
+        {/* Specific Domain Footer - kept cleanly outside the scroll zone */}
+        <div 
+          className="pt-6 border-t flex items-center justify-between shrink-0"
+          style={{ borderColor: colors.border }}
+        >
+          <p 
+            className="text-[9px] font-black uppercase tracking-widest"
+            style={{ color: `${colors.primary}66` }} 
+          >
+            Autosave: Documentation_Protocol_v4.log
+          </p>
+          
+          <div className="flex items-center gap-2">
+            {/* Live Status Indicator */}
+            <div 
+              className="w-2 h-2 rounded-full animate-pulse" 
+              style={{ 
+                backgroundColor: colors.primary,
+                boxShadow: `0 0 8px ${colors.primary}` 
+              }} 
+            />
+            <span 
+              className="text-[9px] font-bold uppercase tracking-tighter"
+              style={{ color: colors.textMuted }}
+            >
+              Live Audit Active
+            </span>
+          </div>
+        </div>
+
       </div>
     </BentoCard>
   );

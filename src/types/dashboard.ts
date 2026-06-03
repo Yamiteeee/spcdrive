@@ -26,6 +26,7 @@ export interface FileItem {
   size: string;
   type: string;
   url: string;        
+  category: string;
   updatedAt: string;
 }
 

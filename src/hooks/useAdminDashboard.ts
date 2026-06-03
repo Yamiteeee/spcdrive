@@ -34,6 +34,7 @@ export function useAdminDashboard() {
         name: dbFile.name,
         size: String(dbFile.size), 
         type: dbFile.type,
+        category: dbFile.category_name || 'Not Categorized', // 🌟 Added data field parsing mapping
         url: dbFile.storage_path,   // This matches your newly added 'url' property!
         updatedAt: dbFile.updated_at 
       }));
@@ -54,7 +55,8 @@ export function useAdminDashboard() {
   }, [activeView, fetchFiles]);
 
   // 2. Handle file uploads mapping fields directly to your DB Schema
-  const handleUploadComplete = async (fileToUpload: File, customMetadata?: Partial<FileItem>) => {
+  // 🌟 SIGNATURE UPGRADED: Accepts target category context parameters from page handlers
+  const handleUploadComplete = async (fileToUpload: File, category: string = 'Not Categorized') => {
     try {
       setLoading(true);
       setError(null);
@@ -86,6 +88,7 @@ export function useAdminDashboard() {
         name: fileToUpload.name,
         size: String(fileToUpload.size), 
         type: fileToUpload.type || fileExt || 'unknown',
+        category_name: category, // 🌟 Assign dynamically selected category value
         storage_path: publicUrl,
         uploaded_by: user.id
       };
@@ -104,6 +107,7 @@ export function useAdminDashboard() {
         name: insertedData.name,
         size: String(insertedData.size), 
         type: insertedData.type,
+        category: insertedData.category_name || 'Not Categorized', // 🌟 Attached validation parsing logic
         url: insertedData.storage_path, // This matches your newly added 'url' property!
         updatedAt: insertedData.updated_at 
       };

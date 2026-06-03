@@ -9,6 +9,7 @@ import { useFileManagement } from '@/hooks/useFileManagement';
 import { useSPCTheme } from '@/providers/ThemeProvider';
 import { useDownloadFile } from '@/hooks/useDownloadFile'; 
 import { useUserApproval } from '@/hooks/useUserApproval'; 
+import { useCategoryManagement } from '@/hooks/useCategoryManagement'; // 🌟 1. Imported the category hook
 import { createClient } from '@/utils/supabase/client'; 
 import { UserManagementData } from '@/types/dashboard';
 
@@ -42,6 +43,7 @@ export default function AdminDashboard() {
 
   const dash = useAdminDashboard();
   const fileManager = useFileManagement();
+  const categoryManager = useCategoryManagement(); // 🌟 2. Instantiated category tracking state
   const { downloadAsset } = useDownloadFile(); 
   const [isProcessingUpload, setIsProcessingUpload] = useState(false);
 
@@ -108,13 +110,22 @@ export default function AdminDashboard() {
     );
   }
 
-  const handleUpload = async (file: File) => {
+  // UPGRADED TO ACCEPT THE TARGET CATEGORY NAME OVER THE TRANSIT PAYLOAD
+  const handleUpload = async (files: File[], category: string) => {
     setIsProcessingUpload(true);
-    setTimeout(() => {
-      fileManager.uploadFile(file);
+    try {
+      // Dispatch upload transfers concurrently, packing the designated category metadata wrapper
+      await Promise.all(
+        files.map(async (file) => {
+          return await fileManager.uploadFile(file, category);
+        })
+      );
+    } catch (err) {
+      console.error('Batch uploading operation failure:', err);
+    } finally {
       setIsProcessingUpload(false);
       dash.toggleUpload(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -205,7 +216,6 @@ export default function AdminDashboard() {
               />
             </BentoCard>
           ) : dash.activeView === 'users' ? (
-            /* 🌟 Perfectly Cleaned, Modular User Directory List Presentation Layer */
             <UserManagement 
               users={userSearch.filteredData}
               onApprove={approval.openApproval}
@@ -219,16 +229,16 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Asset Repository Upload Overlay Component Framework */}
-   {/* 🌟 Update this specific block around line 224 */}
-        <UploadModal 
-          isOpen={dash.isUploadOpen} 
-          isProcessing={isProcessingUpload}
-          onClose={() => dash.toggleUpload(false)} 
-          onUpload={handleUpload} 
-        />
+      {/* Asset Repository Bulk Upload Overlay Component Framework */}
+      <UploadModal 
+        isOpen={dash.isUploadOpen} 
+        isProcessing={isProcessingUpload}
+        onClose={() => dash.toggleUpload(false)} 
+        onUpload={handleUpload} 
+        categories={categoryManager.categories} // 🌟 3. Connected the categories prop stream down smoothly
+      />
 
-      {/* 🌟 Profile Identity Remap Modification Management Modal Layer */}
+      {/* Profile Identity Remap Modification Management Modal Layer */}
       <UpdateUserModal 
         isOpen={userManager.isEditing} 
         onClose={userManager.closeEdit}

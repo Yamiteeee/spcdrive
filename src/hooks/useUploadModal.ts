@@ -6,49 +6,83 @@ import { FileItem } from '@/types/dashboard';
 export function useUploadModal(onSuccess?: (file: FileItem) => void) {
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  const open = () => setIsOpen(true);
   
-  // Guard clause to prevent users from closing the modal while a file is uploading
+  // 🌟 BULK STATS TRACKING
+  const [bulkQueueSize, setBulkQueueSize] = useState(0);
+  const [processedCount, setProcessedCount] = useState(0);
+
+  const open = () => {
+    setIsOpen(true);
+    setBulkQueueSize(0);
+    setProcessedCount(0);
+  };
+  
+  // Prevent users from dismissing the overlay layer during active transfers
   const close = () => {
     if (!isProcessing) setIsOpen(false);
   };
 
   /**
-   * Handles the modal upload lifecycle.
-   * @param rawFile The physical file object from the HTML input element.
-   * @param uploadAction The live async upload function provided by your data hooks.
+   * Handles individual or batch simultaneous file processing cycles.
+   * @param rawFiles Array of file payloads extracted from drag-and-drop or file input frames.
+   * @param uploadAction The live async single upload function provided by your file context engine.
    */
-  const handleUpload = async (
-    rawFile: File, 
+  const handleBulkUpload = async (
+    rawFiles: File[], 
     uploadAction: (file: File) => Promise<FileItem | void>
   ) => {
+    if (rawFiles.length === 0) return;
+
     try {
       setIsProcessing(true);
+      setBulkQueueSize(rawFiles.length);
+      setProcessedCount(0);
 
-      // Execute the live Supabase storage and database upload function passed from the parent hook
-      const uploadedFile = await uploadAction(rawFile);
+      // Map out all uploads to resolve concurrently using Promise.allSettled
+      const uploadPromises = rawFiles.map(async (file) => {
+        try {
+          const uploadedFile = await uploadAction(file);
+          
+          // Increment tracking counter for progress indicators
+          setProcessedCount((prev) => prev + 1);
 
-      // If the action returned a valid database record, pass it up to update the UI tables
-      if (uploadedFile && onSuccess) {
-        onSuccess(uploadedFile);
+          if (uploadedFile && onSuccess) {
+            onSuccess(uploadedFile);
+          }
+          return uploadedFile;
+        } catch (singleFileError) {
+          console.error(`Failed to dispatch transfer payload for ${file.name}:`, singleFileError);
+          throw singleFileError;
+        }
+      });
+
+      const results = await Promise.allSettled(uploadPromises);
+      
+      // Calculate any rejected operations if you want to notify users later
+      const failures = results.filter(r => r.status === 'rejected');
+      
+      if (failures.length > 0) {
+        console.warn(`${failures.length} files out of ${rawFiles.length} failed security/storage processing checks.`);
       }
 
-      // Automatically close the modal panel upon a successful upload transaction
+      // Automatically wrap up overlay session view on complete resolution
       setIsOpen(false);
-      return uploadedFile;
     } catch (err) {
-      console.error('Modal execution lifecycle failed:', err);
+      console.error('Bulk modal pipeline processing error:', err);
     } finally {
       setIsProcessing(false);
+      setBulkQueueSize(0);
+      setProcessedCount(0);
     }
   };
 
   return {
     isOpen,
     isProcessing,
+    bulkQueueSize,
+    processedCount,
     open,
     close,
-    handleUpload,
+    handleBulkUpload,
   };
 }

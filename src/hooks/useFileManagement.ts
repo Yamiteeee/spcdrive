@@ -38,6 +38,7 @@ export function useFileManagement() {
         name: dbFile.name,
         size: dbFile.size,
         type: dbFile.type,
+        category: dbFile.category_name || 'Not Categorized', // 🌟 Added data field parse translation mapping
         url: dbFile.storage_path,
         updatedAt: dbFile.updated_at
       }));
@@ -57,7 +58,8 @@ export function useFileManagement() {
   }, [fetchFiles]);
 
   // 2. UPLOAD FILE: Uploads to Supabase Storage, registers row to database, appends to state
-  const uploadFile = async (browserFile: File) => {
+  // 🌟 SIGNATURE UPGRADED: Accepts incoming category metadata context assignment strings
+  const uploadFile = async (browserFile: File, category: string = 'Not Categorized') => {
     try {
       setLoading(true);
       setError(null);
@@ -89,6 +91,7 @@ export function useFileManagement() {
         name: browserFile.name,
         size: formatFileSize(browserFile.size), 
         type: browserFile.name.split('.').pop()?.toUpperCase() || 'BIN',
+        category_name: category, // 🌟 Assign targeted folder node location pointer 
         storage_path: publicUrl,
         uploaded_by: user.id
       };
@@ -107,6 +110,7 @@ export function useFileManagement() {
         name: insertedData.name,
         size: insertedData.size, 
         type: insertedData.type,
+        category: insertedData.category_name || 'Not Categorized', // 🌟 Attached validation parse logic
         url: insertedData.storage_path,
         updatedAt: insertedData.updated_at
       };
@@ -153,6 +157,7 @@ export function useFileManagement() {
       if (updates.type) dbUpdates.type = updates.type;
       if (updates.size) dbUpdates.size = updates.size;
       if (updates.url) dbUpdates.storage_path = updates.url;
+      if (updates.category) dbUpdates.category_name = updates.category; // 🌟 Enable on-the-fly categorization modifications
 
       const { data: updatedData, error: dbError } = await supabase
         .from('files')
@@ -168,6 +173,7 @@ export function useFileManagement() {
         name: updatedData.name,
         size: updatedData.size,
         type: updatedData.type,
+        category: updatedData.category_name || 'Not Categorized', // 🌟 Synchronize state modifications locally
         url: updatedData.storage_path,
         updatedAt: updatedData.updated_at
       } : f));
