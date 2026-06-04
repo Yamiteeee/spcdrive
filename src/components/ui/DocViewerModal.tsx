@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, FileCode, FileText, X } from 'lucide-react';
+import { Download, FileCode, FileText, X, Loader2 } from 'lucide-react';
 import { useSPCTheme } from '@/providers/ThemeProvider';
 import { FileItem } from '@/types/dashboard';
+import { useDocViewer } from '@/hooks/useDocViewer'; // 🌟 Import the new custom hook
 
 interface DocViewerModalProps {
   previewFile: FileItem | null;
@@ -29,30 +29,16 @@ export function DocViewerModal({
   onDownload,
 }: DocViewerModalProps) {
   const { colors, radius } = useSPCTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Lock body scroll when open to prevent underlying viewport shaking
-  useEffect(() => {
-    if (previewFile) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [previewFile]);
+  
+  // 🌟 Consume layout state from separated context hook
+  const { 
+    mounted, 
+    iframeLoading, 
+    officePreviewUrl, 
+    setIframeLoading 
+  } = useDocViewer({ previewFile, previewUrl, isOfficeDoc });
 
   if (!mounted) return null;
-
-  // Generate the public-facing Google Docs Viewer engine source link
-  const officePreviewUrl = isOfficeDoc && previewUrl
-    ? `https://docs.google.com/gview?url=${encodeURIComponent(previewUrl)}&embedded=true`
-    : null;
 
   return createPortal(
     <AnimatePresence>
@@ -116,9 +102,10 @@ export function DocViewerModal({
               <div className="relative flex-1 min-h-0 bg-neutral-900 overflow-hidden">
                 {isPreviewLoading && (
                   <div
-                    className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold animate-pulse uppercase z-10"
+                    className="absolute inset-0 flex flex-col gap-3 items-center justify-center text-xs font-mono font-bold uppercase z-10"
                     style={{ color: colors.textMuted }}
                   >
+                    <Loader2 className="w-6 h-6 animate-spin" style={{ color: colors.primary }} />
                     Streaming raw buffers securely...
                   </div>
                 )}
@@ -127,28 +114,49 @@ export function DocViewerModal({
                   <div className="w-full h-full flex flex-col">
 
                     {/* Office Document - Rendered via Google Doc Viewer Sandbox Iframe */}
-{isOfficeDoc && officePreviewUrl && (
-  /* FIX: Removed conditional padding or extra layout containers. 
-    We make the wrapper container fill the exact, explicit height available 
-    under the header (calc(85vh - 45px)) and force the iframe to take up 100% of it.
-  */
-  <div 
-    className="w-full bg-[#1a1a1a] relative overflow-hidden"
-    style={{ height: 'calc(85vh - 45px)' }}
-  >
-    <iframe
-      src={officePreviewUrl}
-      title={previewFile.name}
-      className="w-full h-full absolute inset-0 border-none bg-white"
-      sandbox="allow-scripts allow-same-origin allow-popups"
-      style={{ 
-        display: 'block',
-        width: '100%', 
-        height: '100%' 
-      }}
-    />
-  </div>
-)}
+                    {isOfficeDoc && officePreviewUrl && (
+                      <div 
+                        className="w-full bg-[#1a1a1a] relative overflow-hidden"
+                        style={{ height: 'calc(85vh - 45px)' }}
+                      >
+                        {iframeLoading && (
+                          <div 
+                            className="absolute inset-0 flex flex-col gap-3 items-center justify-center bg-neutral-900 text-xs font-mono font-bold uppercase z-20"
+                            style={{ color: colors.textMuted }}
+                          >
+                            <Loader2 className="w-8 h-8 animate-spin" style={{ color: colors.primary }} />
+                            <span>Generating preview cache...</span>
+                          </div>
+                        )}
+                        
+                        <iframe
+                          src={officePreviewUrl}
+                          title={previewFile.name}
+                          className="w-full h-full absolute inset-0 border-none bg-white"
+                          sandbox="allow-scripts allow-same-origin allow-popups"
+                          onLoad={() => setIframeLoading(false)}
+                          style={{ 
+                            display: 'block',
+                            width: '100%', 
+                            height: '100%' 
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Standard Images Content Viewport Display Engine */}
+                    {!isOfficeDoc && ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(fileExtension.toLowerCase()) && (
+                      <div className="w-full h-full flex items-center justify-center p-6 bg-neutral-950/40">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={previewUrl}
+                          alt={previewFile.name}
+                          className="max-w-full max-h-[calc(85vh-80px)] object-contain select-none"
+                          style={{ borderRadius: radius.base }}
+                        />
+                      </div>
+                    )}
+
                     {/* Embedded PDF Documents */}
                     {!isOfficeDoc && fileExtension === 'pdf' && (
                       <iframe
