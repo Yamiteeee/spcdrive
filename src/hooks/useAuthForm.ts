@@ -19,7 +19,7 @@ export function useAuthForm() {
     const cleanEmail = email.trim();
     const cleanPassword = password.trim();
 
-    // 🌟 FALLBACK: If React state is caught in a stale closure, grab it directly from the DOM input element
+    // FALLBACK: If React state is caught in a stale closure, grab it directly from the DOM input element
     let finalName = name.trim();
     if (!isLogin && !finalName && typeof document !== 'undefined') {
       const nameInput = document.querySelector('input[placeholder="e.g., Agent Don"]') as HTMLInputElement;
@@ -28,7 +28,7 @@ export function useAuthForm() {
       }
     }
 
-    console.log("System Auth Diagnostics:", { isLogin, cleanEmail, finalName });
+   
 
     if (!cleanEmail || !cleanPassword) {
       setLocalError("Please fill out all required authentication fields.");
@@ -65,7 +65,7 @@ export function useAuthForm() {
     setTimeout(() => {
       setIsLogin((p) => !p);
       setPassword('');
-      // 🌟 REMOVED: setName(''); to stop it from wiping data out during state sync bumps
+      // REMOVED: setName(''); to stop it from wiping data out during state sync bumps
       setSwitching(false);
     }, 200);
   };

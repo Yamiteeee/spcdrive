@@ -40,7 +40,7 @@ export function AuthCard(props: AuthCardProps) {
 
       {/* Main Auth Form UI */}
       <AuthForm 
-        {...props} // 🌟 Automatically flows name, setName, email, and password down!
+        {...props} //  Automatically flows name, setName, email, and password down!
         title={isLogin ? 'Welcome back' : 'Join SPC Drive'}
         subtitle={isLogin ? 'Sign in to workspace' : 'Create workspace'}
         submitLabel={isLogin ? 'ACCESS SYSTEM' : 'INITIALIZE ACCOUNT'}

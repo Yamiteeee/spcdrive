@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Loader2, Lock, X, CheckCircle2 } from 'lucide-react';
 import { UserManagementData } from '@/types/dashboard';
 
-// 🌟 INLINE STABLE INTERFACE (No extra file required!)
+//  INLINE STABLE INTERFACE (No extra file required!)
 interface UpdatePasswordModalProps {
   isOpen: boolean;
   onClose: () => void;

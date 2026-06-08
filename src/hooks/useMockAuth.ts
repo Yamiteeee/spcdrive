@@ -97,10 +97,10 @@ export function useMockAuth() {
       .maybeSingle();
 
     // 🔍 TESTING TELEMETRY: Open your F12 Browser Developer Console to inspect this!
-    console.log("=== USER LOGIN DEBUG LOG ===");
-    console.log("Authenticated User ID:", data.user.id);
-    console.log("Fetched Profile Data Row:", profile);
-    console.log("Fetch Error Context:", profileFetchError);
+   // console.log("=== USER LOGIN DEBUG LOG ===");
+    //console.log("Authenticated User ID:", data.user.id);
+    //console.log("Fetched Profile Data Row:", profile);
+   // console.log("Fetch Error Context:", profileFetchError);
 
     if (profileFetchError || !profile) {
       setError("ACCESS DENIED: Database profile record not found.");

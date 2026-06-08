@@ -15,7 +15,7 @@ import { useFileBank } from '@/hooks/useFileBank';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { CategoryBar } from '@/components/ui/CategoryBar';
 import { DocViewerModal } from '@/components/ui/DocViewerModal';
-import { Modal } from '@/components/ui/Modal'; // 🌟 Reusing your exact Modal UI
+import { Modal } from '@/components/ui/Modal'; // Reusing your exact Modal UI
 
 interface FileBankProps {
   role: 'admin' | 'user';
@@ -178,42 +178,44 @@ export function FileBank({ role, files, searchQuery, setSearchQuery, onDownload,
         </div>
       </div>
 
-      {/* Creation Mode Bar */}
-      {role === 'admin' && state.isCreatingCategory && (
-        <form 
-          onSubmit={state.handleCreateCategory} 
-          className="flex gap-2 items-center p-2 border animate-in slide-in-from-top-2 duration-200 shrink-0" 
-          style={{ backgroundColor: colors.card, borderColor: colors.border, borderRadius: radius.base }}
-        >
-          <input
-            type="text"
-            required
-            autoFocus
-            placeholder="NAME NEW CATEGORY (E.G., HR, LEGAL, TECH)..."
-            value={state.newCategoryName}
-            onChange={(e) => state.setNewCategoryName(e.target.value)}
-            className="grow bg-transparent border-none text-xs font-bold font-mono tracking-wide uppercase focus:outline-none focus:ring-0 px-2"
-            style={{ color: colors.textMain }}
-          />
-          <div className="flex gap-1.5 shrink-0">
-            <button
-              type="submit"
-              className="px-3 py-1.5 text-[10px] font-black uppercase text-white tracking-widest flex items-center gap-1 transition-transform active:scale-95"
-              style={{ backgroundColor: colors.primary, borderRadius: radius.base }}
-            >
-              <Plus className="w-3 h-3" /> Save
-            </button>
-            <button
-              type="button"
-              onClick={() => { state.setIsCreatingCategory(false); state.setNewCategoryName(''); }}
-              className="px-3 py-1.5 text-[10px] font-black uppercase border tracking-widest transition-colors"
-              style={{ borderColor: colors.border, color: colors.textMuted, borderRadius: radius.base }}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
+     {/* Creation Mode Bar */}
+{role === 'admin' && state.isCreatingCategory && (
+  <form 
+    onSubmit={state.handleCreateCategory} 
+    className="flex flex-col sm:flex-row gap-3 p-3 sm:p-2 border animate-in slide-in-from-top-2 duration-200 shrink-0 w-full" 
+    style={{ backgroundColor: colors.card, borderColor: colors.border, borderRadius: radius.base }}
+  >
+    <input
+      type="text"
+      required
+      autoFocus
+      placeholder="NAME NEW CATEGORY (E.G., HR, LEGAL, TECH)..."
+      value={state.newCategoryName}
+      onChange={(e) => state.setNewCategoryName(e.target.value)}
+      className="grow bg-transparent border-none text-xs font-bold font-mono tracking-wide uppercase focus:outline-none focus:ring-0 px-2 py-1.5 sm:py-0 min-w-0"
+      style={{ color: colors.textMain }}
+    />
+    
+    {/* Button grid grouping optimized for full-width tap actions on mobile */}
+    <div className="flex gap-2 shrink-0 w-full sm:w-auto justify-end">
+      <button
+        type="button"
+        onClick={() => { state.setIsCreatingCategory(false); state.setNewCategoryName(''); }}
+        className="flex-1 sm:flex-initial px-4 py-2 sm:py-1.5 text-[10px] font-black uppercase border tracking-widest transition-colors text-center justify-center flex items-center"
+        style={{ borderColor: colors.border, color: colors.textMuted, borderRadius: radius.base }}
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        className="flex-1 sm:flex-initial px-4 py-2 sm:py-1.5 text-[10px] font-black uppercase text-white tracking-widest flex items-center justify-center gap-1 transition-transform active:scale-95"
+        style={{ backgroundColor: colors.primary, borderRadius: radius.base }}
+      >
+        <Plus className="w-3 h-3" /> Save
+      </button>
+    </div>
+  </form>
+)}
 
       {/* Extracted Category Toolbar Bar Component */}
       <CategoryBar
