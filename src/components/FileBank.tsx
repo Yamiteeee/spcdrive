@@ -1,6 +1,7 @@
 'use client';
 
-import { Download, Edit2, Trash2, FileCode, FolderPlus, Plus, Tag, Layers, CheckSquare, Square, Eye } from 'lucide-react';
+import { useState } from 'react';
+import { Download, Edit2, Trash2, FileCode, FolderPlus, Plus, Tag, Layers, CheckSquare, Square, Eye, FileArchive, ArrowDownToLine } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileItem } from '@/types/dashboard';
 import { Table } from '@/components/ui/Table';
@@ -14,6 +15,7 @@ import { useFileBank } from '@/hooks/useFileBank';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { CategoryBar } from '@/components/ui/CategoryBar';
 import { DocViewerModal } from '@/components/ui/DocViewerModal';
+import { Modal } from '@/components/ui/Modal'; // 🌟 Reusing your exact Modal UI
 
 interface FileBankProps {
   role: 'admin' | 'user';
@@ -21,13 +23,17 @@ interface FileBankProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onDownload: (file: FileItem) => void | Promise<void>;
-  onDelete: (id: string) => void | Promise<void>; // 👈 Fixed: strictly expect string to match dashboard
-  onUpdate: (id: string, updatedData: any) => void | Promise<void>; // 👈 Fixed: strictly expect string to match dashboard
+  onDelete: (id: string) => void | Promise<void>;
+  onUpdate: (id: string, updatedData: any) => void | Promise<void>;
 }
 
 export function FileBank({ role, files, searchQuery, setSearchQuery, onDownload, onDelete, onUpdate }: FileBankProps) {
   const { colors, radius } = useSPCTheme();
   const state = useFileBank({ files, searchQuery, onUpdate });
+  
+  // Intercept state tracking for confirmation action sequences
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [pendingSingleFile, setPendingSingleFile] = useState<FileItem | null>(null); // 🌟 Added single item intercept tracking
 
   const columns = [
     {
@@ -123,7 +129,7 @@ export function FileBank({ role, files, searchQuery, setSearchQuery, onDownload,
       render: (file: FileItem) => (
         <div className="flex justify-end gap-2 pr-4" onClick={(e) => e.stopPropagation()}>
           <ActionButton icon={<Eye size={15} />} label="View" color={colors.primary} onClick={() => state.handleOpenViewer(file)} />
-          <ActionButton icon={<Download size={15} />} label="Retrieve" color={colors.textMain} onClick={() => onDownload(file)} />
+          <ActionButton icon={<Download size={15} />} label="Retrieve" color={colors.textMain} onClick={() => setPendingSingleFile(file)} /> {/* 🌟 Intercepted single item action */}
           {role === 'admin' && (
             <>
               <ActionButton icon={<Edit2 size={15} />} label="Modify" color={colors.textMuted} onClick={() => state.setEditingFile(file)} />
@@ -136,19 +142,20 @@ export function FileBank({ role, files, searchQuery, setSearchQuery, onDownload,
   ];
 
   return (
-    <div className="space-y-4 flex flex-col h-full">
+    <div className="space-y-4 flex flex-col h-full w-full max-w-full overflow-hidden">
       {/* Top Utility Control bar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full">
         <div className="grow">
           <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="SCAN REPOSITORY..." />
         </div>
         
-        <div className="flex gap-2 items-center">
+        {/* Slidable container row for actions on mobile */}
+        <div className="flex gap-2 items-center overflow-x-auto no-scrollbar shrink-0 pb-1 sm:pb-0">
           {state.filteredFiles.length > 0 && (
             <button
               type="button"
-              disabled={state.isBulkDownloading}
-              onClick={state.handleBulkDownload}
+              disabled={state.isBulkDownloading || state.targetsForBulkDownload.length === 0}
+              onClick={() => setIsBulkModalOpen(true)}
               className="flex items-center justify-center gap-2 px-4 py-2 border text-xs font-bold uppercase tracking-wider transition-colors shrink-0 disabled:opacity-50"
               style={{ borderColor: `${colors.primary}40`, borderRadius: radius.base, color: colors.primary, backgroundColor: `${colors.primary}05` }}
             >
@@ -220,10 +227,12 @@ export function FileBank({ role, files, searchQuery, setSearchQuery, onDownload,
       />
       
       {/* Table Container Wrapper Viewport */}
-      <div className="grow overflow-y-auto max-h-105 pr-2 custom-scrollbar relative">
-        <AnimatePresence mode="popLayout" initial={false}>
-          <Table data={state.filteredFiles} columns={columns} />
-        </AnimatePresence>
+      <div className="grow overflow-x-auto overflow-y-auto max-h-105 pr-2 custom-scrollbar relative w-full">
+        <div className="min-w-200 w-full block vertical-middle">
+          <AnimatePresence mode="popLayout" initial={false}>
+            <Table data={state.filteredFiles} columns={columns} />
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Right Drawer Slide out */}
@@ -242,6 +251,110 @@ export function FileBank({ role, files, searchQuery, setSearchQuery, onDownload,
         onClose={state.handleCloseViewer}
         onDownload={onDownload}
       />
+
+      {/* Bulk Download Confirmation Modal Instance */}
+      <Modal 
+        isOpen={isBulkModalOpen} 
+        onClose={() => setIsBulkModalOpen(false)} 
+        title="Confirm Bulk Retrieval"
+        subtitle={`System matches ${state.targetsForBulkDownload.length} items staged for packaging`}
+      >
+        <div className="p-6 space-y-4">
+          <div 
+            className="text-xs font-mono p-3 border space-y-2 max-h-48 overflow-y-auto custom-scrollbar"
+            style={{ backgroundColor: `${colors.textMuted}08`, borderColor: colors.border, borderRadius: radius.base }}
+          >
+            {state.targetsForBulkDownload.map((file) => (
+              <div key={file.id} className="flex justify-between items-center gap-4">
+                <span className="truncate font-bold" style={{ color: colors.textMain }}>{file.name}</span>
+                <span className="shrink-0 opacity-60 text-[10px] font-black uppercase tracking-wider">{file.size}</span>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-xs font-medium leading-relaxed" style={{ color: colors.textMuted }}>
+            The files listed above will be bundled together and served as a single compressed archival file payload (.ZIP). Proceed?
+          </p>
+
+          <div className="flex justify-end gap-2 pt-2 border-t" style={{ borderColor: `${colors.border}40` }}>
+            <button
+              type="button"
+              onClick={() => setIsBulkModalOpen(false)}
+              className="px-4 py-2 text-[10px] font-black uppercase border tracking-widest transition-colors"
+              style={{ borderColor: colors.border, color: colors.textMuted, borderRadius: radius.base }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsBulkModalOpen(false);
+                state.handleBulkDownload();
+              }}
+              className="px-4 py-2 text-[10px] font-black uppercase text-white tracking-widest flex items-center gap-1.5 transition-transform active:scale-95"
+              style={{ backgroundColor: colors.primary, borderRadius: radius.base }}
+            >
+              <FileArchive className="w-3.5 h-3.5" /> Initialize Download
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 🌟 New Single File Download Confirmation Modal Instance */}
+      <Modal
+        isOpen={!!pendingSingleFile}
+        onClose={() => setPendingSingleFile(null)}
+        title="Confirm Asset Retrieval"
+        subtitle={pendingSingleFile ? `Target payload: UID_${pendingSingleFile.id}` : ''}
+      >
+        <div className="p-6 space-y-4">
+          <div 
+            className="text-xs font-mono p-4 border flex flex-col gap-2"
+            style={{ backgroundColor: `${colors.textMuted}05`, borderColor: colors.border, borderRadius: radius.base }}
+          >
+            <div className="flex justify-between gap-4">
+              <span className="text-neutral-500 font-bold uppercase tracking-wider text-[10px]">Asset Name:</span>
+              <span className="font-bold truncate text-right max-w-xs" style={{ color: colors.textMain }}>{pendingSingleFile?.name}</span>
+            </div>
+            <div className="flex justify-between gap-4 border-t pt-2" style={{ borderColor: `${colors.border}30` }}>
+              <span className="text-neutral-500 font-bold uppercase tracking-wider text-[10px]">Weight Parameter:</span>
+              <span className="font-bold font-mono" style={{ color: colors.textMain }}>{pendingSingleFile?.size}</span>
+            </div>
+            <div className="flex justify-between gap-4 border-t pt-2" style={{ borderColor: `${colors.border}30` }}>
+              <span className="text-neutral-500 font-bold uppercase tracking-wider text-[10px]">Data Format:</span>
+              <span className="font-black font-mono uppercase" style={{ color: colors.primary }}>{pendingSingleFile?.type}</span>
+            </div>
+          </div>
+
+          <p className="text-xs font-medium leading-relaxed" style={{ color: colors.textMuted }}>
+            You are initializing an isolated pipeline fetch for this single asset payload. The secure stream connection will begin immediately.
+          </p>
+
+          <div className="flex justify-end gap-2 pt-2 border-t" style={{ borderColor: `${colors.border}40` }}>
+            <button
+              type="button"
+              onClick={() => setPendingSingleFile(null)}
+              className="px-4 py-2 text-[10px] font-black uppercase border tracking-widest transition-colors"
+              style={{ borderColor: colors.border, color: colors.textMuted, borderRadius: radius.base }}
+            >
+              Abort
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (pendingSingleFile) {
+                  onDownload(pendingSingleFile);
+                  setPendingSingleFile(null);
+                }
+              }}
+              className="px-4 py-2 text-[10px] font-black uppercase text-white tracking-widest flex items-center gap-1.5 transition-transform active:scale-95"
+              style={{ backgroundColor: colors.primary, borderRadius: radius.base }}
+            >
+              <ArrowDownToLine className="w-3.5 h-3.5" /> Confirm Download
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

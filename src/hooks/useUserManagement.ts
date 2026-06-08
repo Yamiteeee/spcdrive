@@ -36,7 +36,7 @@ export function useUserManagement(searchSync?: SearchSyncParams) {
 
       if (fetchError) throw fetchError;
 
-      console.log("🚨 [STEP 1] RAW DATABASE PAYLOAD FROM SUPABASE:", data);
+
 
       const normalizedUsers = (data || []).map(user => ({
         id: user.id,
@@ -46,10 +46,10 @@ export function useUserManagement(searchSync?: SearchSyncParams) {
         status: (user.status || 'pending').toLowerCase().trim() as any
       }));
 
-      console.log("🚨 [STEP 2] FRONTEND NORMALIZED USERS ARRAY:", normalizedUsers);
+  
 
       const pendingCount = normalizedUsers.filter(u => u.status === 'pending').length;
-      console.log(`💡 [DIAGNOSTIC] Found ${pendingCount} pending accounts in normalized array.`);
+    
 
       setUsers(normalizedUsers);
     } catch (err: any) {
@@ -65,23 +65,16 @@ export function useUserManagement(searchSync?: SearchSyncParams) {
     fetchUsers();
   }, [fetchUsers]);
 
-  useEffect(() => {
-    console.log("🚨 [STEP 3] SEARCH LAYOUT INTERACTION:", {
-      hasSearchSyncObj: !!searchSync,
-      currentSearchValue: searchSync?.query,
-      isSetQueryAFunction: typeof searchSync?.setQuery === 'function'
-    });
-
+useEffect(() => {
     if (searchSync && typeof searchSync.setQuery === 'function') {
       if (searchSync.query && searchSync.query.trim() !== '') {
-        console.log(`⚡ Syncing active search query cache: "${searchSync.query}"`);
         searchSync.setQuery(searchSync.query);
       }
     }
   }, [users, searchSync]);
 
   // Monitor current working user target updates to synchronize form staging fields
-  useEffect(() => {
+ useEffect(() => {
     if (selectedUser) {
       setFormData({ ...selectedUser });
       setNewPassword(''); 
@@ -113,7 +106,6 @@ export function useUserManagement(searchSync?: SearchSyncParams) {
         setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updatedRows[0] } : u));
       }
     } catch (err: any) {
-      console.error('Status modification failed:', err);
       setError(err.message || 'Failed to update user account status.');
     } finally {
       setIsActionProcessing(false);
@@ -226,7 +218,6 @@ export function useUserManagement(searchSync?: SearchSyncParams) {
       }
       await fetchUsers();
     } catch (err) {
-      console.error("Hook administrative save execution failed:", err);
     }
   };
 

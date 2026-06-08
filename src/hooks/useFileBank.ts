@@ -9,7 +9,6 @@ import JSZip from 'jszip';
 interface UseFileBankProps {
   files: FileItem[];
   searchQuery: string;
-  // 👈 FIXED: Strictly matching your component and dashboard handler layout signatures
   onUpdate: (id: string, updatedFile: any) => void | Promise<void>;
 }
 
@@ -73,7 +72,6 @@ export function useFileBank({ files, searchQuery, onUpdate }: UseFileBankProps) 
     const targetFile = files.find((f: FileItem) => String(f.id) === fileIdStr);
     
     if (targetFile && targetFile.category !== targetCategory) {
-      // 👈 FIXED: Casting targetFile.id into a String to match the new onUpdate type rules safely
       onUpdate(String(targetFile.id), { ...targetFile, category: targetCategory });
     }
   };
@@ -164,7 +162,7 @@ export function useFileBank({ files, searchQuery, onUpdate }: UseFileBankProps) 
         alert("Could not generate secure document preview stream.");
       }
     } catch (err) {
-      console.error("Preview configuration sequence failure:", err);
+      // Console logging deleted
     } finally {
       setIsPreviewLoading(false);
     }
@@ -217,7 +215,7 @@ export function useFileBank({ files, searchQuery, onUpdate }: UseFileBankProps) 
       setSelectedFileIds({});
 
     } catch (err) {
-      console.error("Bulk archive processing failed:", err);
+      // Console logging deleted
       alert("Failed to build bulk bundle file archive.");
     } finally {
       setIsBulkDownloading(false);

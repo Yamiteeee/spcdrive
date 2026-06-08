@@ -134,9 +134,11 @@ export default function Home() {
                     Enter Platform
                   </Button>
                 </Link>
-                <Button variant="secondary" size="lg" className="w-full sm:w-auto">
-                  View Features
-                </Button>
+               <Link href="/dashboard/updates" passHref className="w-full sm:w-auto">
+              <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+                View Updates
+              </Button>
+            </Link>
               </div>
             </div>
 
