@@ -62,6 +62,38 @@ export function useCategoryManagement() {
     }
   };
 
+  // 🌟 NEW: Delete a category name from the database lookup table
+  const deleteCategory = async (name: string) => {
+    const trimmedName = name.trim();
+    
+    // Guard against deleting the default core fallback view template
+    if (trimmedName === 'Not Categorized') {
+      return { success: false, error: 'Cannot delete the core system category.' };
+    }
+
+    try {
+      setError(null);
+      setIsLoading(true);
+
+      const { error: dbError } = await supabase
+        .from('repository_categories')
+        .delete()
+        .eq('name', trimmedName);
+
+      if (dbError) throw dbError;
+
+      // Update local state instantaneously for snappy UI responses
+      setCategories((prev) => prev.filter((cat) => cat !== trimmedName));
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error deleting category:', err);
+      setError(err.message || 'Failed to remove category.');
+      return { success: false, error: err.message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Run initial pull on mount
   useEffect(() => {
     fetchCategories();
@@ -73,5 +105,6 @@ export function useCategoryManagement() {
     error,
     refreshCategories: fetchCategories,
     addCategory,
+    deleteCategory, // 🌟 Exposed here to completely resolve the TS2339 error!
   };
 }

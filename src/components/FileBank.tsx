@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Download, Edit2, Trash2, FileCode, FolderPlus, Plus, Tag, Layers, CheckSquare, Square, Eye, FileArchive, ArrowDownToLine } from 'lucide-react';
+import { Download, Edit2, Trash2, FileCode, FolderPlus, Plus, Tag, Layers, CheckSquare, Square, Eye, FileArchive, ArrowDownToLine, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileItem } from '@/types/dashboard';
 import { Table } from '@/components/ui/Table';
@@ -25,15 +25,58 @@ interface FileBankProps {
   onDownload: (file: FileItem) => void | Promise<void>;
   onDelete: (id: string) => void | Promise<void>;
   onUpdate: (id: string, updatedData: any) => void | Promise<void>;
+  // 🌟 Clean explicit type return matching your hook signature
+  onDeleteCategory?: (category: string) => Promise<{ success: boolean; error?: any }>;
 }
 
-export function FileBank({ role, files, searchQuery, setSearchQuery, onDownload, onDelete, onUpdate }: FileBankProps) {
+export function FileBank({ role, files, searchQuery, setSearchQuery, onDownload, onDelete, onUpdate, onDeleteCategory }: FileBankProps) {
   const { colors, radius } = useSPCTheme();
   const state = useFileBank({ files, searchQuery, onUpdate });
   
   // Intercept state tracking for confirmation action sequences
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
-  const [pendingSingleFile, setPendingSingleFile] = useState<FileItem | null>(null); // 🌟 Added single item intercept tracking
+  const [pendingSingleFile, setPendingSingleFile] = useState<FileItem | null>(null);
+  const [pendingDeleteCategory, setPendingDeleteCategory] = useState<string | null>(null); // 🌟 Category deletion modal selector state
+  const [isDeletingCat, setIsDeletingCat] = useState(false);
+
+  // 🌟 Handles real-time cleanup instantly without forcing manual page refreshes
+ const handleDeleteCategoryConfirm = async () => {
+  if (!pendingDeleteCategory || !onDeleteCategory) return;
+  try {
+    setIsDeletingCat(true);
+    
+    // 1. Execute backend database deletion
+    await onDeleteCategory(pendingDeleteCategory);
+    
+    // 2. Real-time Category UI Cleanup
+    if (state.activeFilterCategory === pendingDeleteCategory) {
+      state.changeFilterCategory('All Assets');
+    }
+    
+    if (state.categories) {
+      const index = state.categories.indexOf(pendingDeleteCategory);
+      if (index > -1) {
+        state.categories.splice(index, 1);
+      }
+    }
+
+    // 3. 🌟 REAL-TIME FILE DATA CLEANUP (No Refresh Needed)
+    // Map through the files currently inside your state hook and re-assign them locally
+    if (files && files.length > 0) {
+      files.forEach((file) => {
+        if (file.category === pendingDeleteCategory) {
+          file.category = 'Not Categorized'; // Or "" depending on your db default string type
+        }
+      });
+    }
+
+  } catch (err) {
+    console.error("Failed executing real-time category removal sequence:", err);
+  } finally {
+    setIsDeletingCat(false);
+    setPendingDeleteCategory(null);
+  }
+};
 
   const columns = [
     {
@@ -129,7 +172,7 @@ export function FileBank({ role, files, searchQuery, setSearchQuery, onDownload,
       render: (file: FileItem) => (
         <div className="flex justify-end gap-2 pr-4" onClick={(e) => e.stopPropagation()}>
           <ActionButton icon={<Eye size={15} />} label="View" color={colors.primary} onClick={() => state.handleOpenViewer(file)} />
-          <ActionButton icon={<Download size={15} />} label="Retrieve" color={colors.textMain} onClick={() => setPendingSingleFile(file)} /> {/* 🌟 Intercepted single item action */}
+          <ActionButton icon={<Download size={15} />} label="Retrieve" color={colors.textMain} onClick={() => setPendingSingleFile(file)} />
           {role === 'admin' && (
             <>
               <ActionButton icon={<Edit2 size={15} />} label="Modify" color={colors.textMuted} onClick={() => state.setEditingFile(file)} />
@@ -178,55 +221,57 @@ export function FileBank({ role, files, searchQuery, setSearchQuery, onDownload,
         </div>
       </div>
 
-     {/* Creation Mode Bar */}
-{role === 'admin' && state.isCreatingCategory && (
-  <form 
-    onSubmit={state.handleCreateCategory} 
-    className="flex flex-col sm:flex-row gap-3 p-3 sm:p-2 border animate-in slide-in-from-top-2 duration-200 shrink-0 w-full" 
-    style={{ backgroundColor: colors.card, borderColor: colors.border, borderRadius: radius.base }}
-  >
-    <input
-      type="text"
-      required
-      autoFocus
-      placeholder="NAME NEW CATEGORY (E.G., HR, LEGAL, TECH)..."
-      value={state.newCategoryName}
-      onChange={(e) => state.setNewCategoryName(e.target.value)}
-      className="grow bg-transparent border-none text-xs font-bold font-mono tracking-wide uppercase focus:outline-none focus:ring-0 px-2 py-1.5 sm:py-0 min-w-0"
-      style={{ color: colors.textMain }}
-    />
-    
-    {/* Button grid grouping optimized for full-width tap actions on mobile */}
-    <div className="flex gap-2 shrink-0 w-full sm:w-auto justify-end">
-      <button
-        type="button"
-        onClick={() => { state.setIsCreatingCategory(false); state.setNewCategoryName(''); }}
-        className="flex-1 sm:flex-initial px-4 py-2 sm:py-1.5 text-[10px] font-black uppercase border tracking-widest transition-colors text-center justify-center flex items-center"
-        style={{ borderColor: colors.border, color: colors.textMuted, borderRadius: radius.base }}
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        className="flex-1 sm:flex-initial px-4 py-2 sm:py-1.5 text-[10px] font-black uppercase text-white tracking-widest flex items-center justify-center gap-1 transition-transform active:scale-95"
-        style={{ backgroundColor: colors.primary, borderRadius: radius.base }}
-      >
-        <Plus className="w-3 h-3" /> Save
-      </button>
-    </div>
-  </form>
-)}
+      {/* Creation Mode Bar */}
+      {role === 'admin' && state.isCreatingCategory && (
+        <form 
+          onSubmit={state.handleCreateCategory} 
+          className="flex flex-col sm:flex-row gap-3 p-3 sm:p-2 border animate-in slide-in-from-top-2 duration-200 shrink-0 w-full" 
+          style={{ backgroundColor: colors.card, borderColor: colors.border, borderRadius: radius.base }}
+        >
+          <input
+            type="text"
+            required
+            autoFocus
+            placeholder="NAME NEW CATEGORY (E.G., HR, LEGAL, TECH)..."
+            value={state.newCategoryName}
+            onChange={(e) => state.setNewCategoryName(e.target.value)}
+            className="grow bg-transparent border-none text-xs font-bold font-mono tracking-wide uppercase focus:outline-none focus:ring-0 px-2 py-1.5 sm:py-0 min-w-0"
+            style={{ color: colors.textMain }}
+          />
+          
+          <div className="flex gap-2 shrink-0 w-full sm:w-auto justify-end">
+            <button
+              type="button"
+              onClick={() => { state.setIsCreatingCategory(false); state.setNewCategoryName(''); }}
+              className="flex-1 sm:flex-initial px-4 py-2 sm:py-1.5 text-[10px] font-black uppercase border tracking-widest transition-colors text-center justify-center flex items-center"
+              style={{ borderColor: colors.border, color: colors.textMuted, borderRadius: radius.base }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 sm:flex-initial px-4 py-2 sm:py-1.5 text-[10px] font-black uppercase text-white tracking-widest flex items-center justify-center gap-1 transition-transform active:scale-95"
+              style={{ backgroundColor: colors.primary, borderRadius: radius.base }}
+            >
+              <Plus className="w-3 h-3" /> Save
+            </button>
+          </div>
+        </form>
+      )}
 
       {/* Extracted Category Toolbar Bar Component */}
-      <CategoryBar
-        role={role}
-        categories={state.categories}
-        activeFilterCategory={state.activeFilterCategory}
-        dragOverCategory={state.dragOverCategory}
-        changeFilterCategory={state.changeFilterCategory}
-        setDragOverCategory={state.setDragOverCategory}
-        handleFolderDrop={state.handleFolderDrop}
-      />
+     <CategoryBar
+      role={role}
+      categories={state.categories}
+      activeFilterCategory={state.activeFilterCategory}
+      dragOverCategory={state.dragOverCategory}
+      changeFilterCategory={state.changeFilterCategory}
+      setDragOverCategory={state.setDragOverCategory}
+      handleFolderDrop={state.handleFolderDrop}
+      // 🌟 Change 'onTriggerDeleteCategory' to 'onDeleteCategory'
+      // 🌟 Type the incoming parameter explicitly as a string: (cat: string)
+      onDeleteCategory={(cat: string) => setPendingDeleteCategory(cat)} 
+    />
       
       {/* Table Container Wrapper Viewport */}
       <div className="grow overflow-x-auto overflow-y-auto max-h-105 pr-2 custom-scrollbar relative w-full">
@@ -302,7 +347,7 @@ export function FileBank({ role, files, searchQuery, setSearchQuery, onDownload,
         </div>
       </Modal>
 
-      {/* 🌟 New Single File Download Confirmation Modal Instance */}
+      {/* Single File Download Confirmation Modal Instance */}
       <Modal
         isOpen={!!pendingSingleFile}
         onClose={() => setPendingSingleFile(null)}
@@ -353,6 +398,50 @@ export function FileBank({ role, files, searchQuery, setSearchQuery, onDownload,
               style={{ backgroundColor: colors.primary, borderRadius: radius.base }}
             >
               <ArrowDownToLine className="w-3.5 h-3.5" /> Confirm Download
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 🌟 Global Unified Category Deletion Confirmation Modal Instance */}
+      <Modal
+        isOpen={!!pendingDeleteCategory}
+        onClose={() => setPendingDeleteCategory(null)}
+        title="Purge Repository Category"
+        subtitle={pendingDeleteCategory ? `Target Entity: ${pendingDeleteCategory.toUpperCase()}` : ''}
+      >
+        <div className="p-6 space-y-4">
+          <div 
+            className="p-4 border flex gap-3 items-start"
+            style={{ backgroundColor: `${colors.danger}05`, borderColor: `${colors.danger}30`, borderRadius: radius.base }}
+          >
+            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" style={{ color: colors.danger }} />
+            <div className="space-y-1">
+              <h5 className="text-xs font-bold uppercase tracking-wider" style={{ color: colors.textMain }}>Destructive Action</h5>
+              <p className="text-[11px] leading-relaxed" style={{ color: colors.textMuted }}>
+                Deleting the category <strong style={{ color: colors.textMain }}>"{pendingDeleteCategory}"</strong> will remove it as an organizational filter. Existing files within this category will automatically fallback to <span className="font-mono text-amber-500">"Not Categorized"</span>.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t" style={{ borderColor: `${colors.border}40` }}>
+            <button
+              type="button"
+              disabled={isDeletingCat}
+              onClick={() => setPendingDeleteCategory(null)}
+              className="px-4 py-2 text-[10px] font-black uppercase border tracking-widest transition-colors"
+              style={{ borderColor: colors.border, color: colors.textMuted, borderRadius: radius.base }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isDeletingCat}
+              onClick={handleDeleteCategoryConfirm}
+              className="px-4 py-2 text-[10px] font-black uppercase text-white tracking-widest flex items-center gap-1.5 transition-transform active:scale-95"
+              style={{ backgroundColor: colors.danger, borderRadius: radius.base }}
+            >
+              {isDeletingCat ? 'Purging...' : 'Confirm Purge'}
             </button>
           </div>
         </div>

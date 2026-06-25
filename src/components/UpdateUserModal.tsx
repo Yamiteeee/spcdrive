@@ -48,6 +48,12 @@ export function UpdateUserModal({
       return;
     }
 
+    // 🌟 Validation step for email safety
+    if (!formData.email || !formData.email.includes('@')) {
+      setValidationError("A valid secure routing email address is required.");
+      return;
+    }
+
     try {
       await onConfirmUpdate();
       setIsSuccess(true); // Smooth transition inside the current frame container grid to success message
@@ -100,6 +106,7 @@ export function UpdateUserModal({
 
             {/* Identity Field Mutation Block */}
             <form onSubmit={handleSubmit} className="space-y-4 text-left">
+              {/* Profile Name Container Row */}
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-wider" style={{ color: colors.primary }}>
                   Display Profile Name
@@ -120,26 +127,47 @@ export function UpdateUserModal({
                 />
               </div>
 
-             <div className="space-y-2">
+              {/* 🌟 NEW SECURE EMAIL ROUTING INTERFACE BLOCK */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-wider" style={{ color: colors.primary }}>
+                  Secure Email Routing
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={formData.email || ''}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  disabled={isProcessing}
+                  placeholder="agent@spcdrive.com"
+                  className="w-full px-4 py-3 border text-sm transition-all focus:outline-none focus:ring-2 bg-transparent"
+                  style={{ 
+                    borderRadius: radius.base, 
+                    borderColor: colors.border,
+                    color: colors.textMain,
+                  }}
+                />
+              </div>
+
+              {/* Clearance Role Container Dropdown */}
+              <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-wider" style={{ color: colors.primary }}>
                     System Clearances Role
                 </label>
                 <select
                     value={formData.role || 'user'}
-                    // 🌟 FIXED BY ADDING: as UserManagementData['role']
                     onChange={(e) => setFormData({ ...formData, role: e.target.value as UserManagementData['role'] })}
                     disabled={isProcessing}
                     className="w-full px-4 py-3 border text-sm transition-all focus:outline-none focus:ring-2 bg-transparent"
                     style={{ 
-                    borderRadius: radius.base, 
-                    borderColor: colors.border,
-                    color: colors.textMain,
+                      borderRadius: radius.base, 
+                      borderColor: colors.border,
+                      color: colors.textMain,
                     }}
                 >
                     <option value="user" className="text-black">User Account</option>
                     <option value="admin" className="text-black">Administrator Access</option>
                 </select>
-                </div>
+              </div>
 
               {/* Functional Framework Form Feedback Alerts */}
               {validationError && (
