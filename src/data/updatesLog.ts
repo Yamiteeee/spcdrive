@@ -14,6 +14,26 @@ export interface UpdateLog {
 
 export const updatesRegistry: UpdateLog[] = [
   {
+    id: "v-1-1-4",
+    version: "v1.1.4",
+    deploymentDate: "2026-06-25 10:10 AM",
+    author: "LEAD_DEV",
+    environment: "production",
+    summary: "Patched critical lifecycle and filtering bottlenecks across repository asset management modules.",
+    modifications: [
+      {
+        type: "patch",
+        scope: "Category Bar Core",
+        description: "Injected defensive array preprocessing fallbacks ensuring 'All Assets' auto-resolves at index 0 if excluded by the parent state parameters."
+      },
+      {
+        type: "patch",
+        scope: "FileBank Data Hook Slicer",
+        description: "Introduced deep string normalization mapping ('ALL_ASSETS' vs 'All Assets') inside useFileBank hooks to eliminate empty table results when selecting global view states."
+      }
+    ]
+  },
+  {
     id: "v-1-1-3",
     version: "v1.1.3",
     deploymentDate: "2026-06-25 09:25 AM",
@@ -32,7 +52,6 @@ export const updatesRegistry: UpdateLog[] = [
         description: "Injected local state mutators into category deletion pipelines. purging a category now automatically reassigns orphan assets to 'Not Categorized' instantly in the UI with zero reload friction."
       },
       {
-        //test
         type: "security",
         scope: "Identity Management API",
         description: "Expanded core database mutation logic within user management hooks and profile modals to securely support editing account routing emails alongside display name records."
