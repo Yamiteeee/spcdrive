@@ -218,6 +218,8 @@ export default function AdminDashboard() {
                     onUpdate={fileManager.updateFile}
                     onDelete={fileManager.deleteFile}
                     onDownload={downloadAsset} 
+                    onDeleteCategory={categoryManager.deleteCategory}
+                    
                   />
                 </BentoCard>
               </PageTransition>

@@ -142,6 +142,7 @@ useEffect(() => {
   };
 
   // 4. UPDATE USER DETAILS: Handles administrative profiling updates
+ // 4. UPDATE USER DETAILS: Handles administrative profiling updates
   const updateUserDetails = async (updatedUser: UserManagementData) => {
     try {
       setIsActionProcessing(true);
@@ -151,6 +152,7 @@ useEffect(() => {
         .from('profiles')
         .update({
           name: updatedUser.name,
+          email: updatedUser.email, // 🌟 ADDED THIS LINE: Commit email mutations to DB
           role: updatedUser.role,
           status: updatedUser.status
         })

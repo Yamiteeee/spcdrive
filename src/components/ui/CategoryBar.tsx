@@ -1,16 +1,17 @@
 'use client';
 
-import { Folder } from 'lucide-react';
+import { Folder, X } from 'lucide-react';
 import { useSPCTheme } from '@/providers/ThemeProvider';
 
 interface CategoryBarProps {
-  role: string;
+  role: 'admin' | 'user';
   categories: string[];
   activeFilterCategory: string;
   dragOverCategory: string | null;
   changeFilterCategory: (category: string) => void;
   setDragOverCategory: (category: string | null) => void;
   handleFolderDrop: (e: React.DragEvent, category: string) => void;
+  onDeleteCategory?: (category: string) => void; // 🌟 Updated operational reference
 }
 
 export function CategoryBar({
@@ -20,61 +21,70 @@ export function CategoryBar({
   dragOverCategory,
   changeFilterCategory,
   setDragOverCategory,
-  handleFolderDrop
+  handleFolderDrop,
+  onDeleteCategory, // 🌟 Destructured here so it's fully accessible below!
 }: CategoryBarProps) {
   const { colors, radius } = useSPCTheme();
 
   return (
-    <div className="flex gap-2 overflow-x-auto whitespace-nowrap max-w-full pb-1.5 pt-0.5 custom-scrollbar shrink-0 select-none">
-      <button
-        type="button"
-        onClick={() => changeFilterCategory('ALL_ASSETS')}
-        onDragOver={(e) => { e.preventDefault(); role === 'admin' && setDragOverCategory('ALL_ASSETS'); }}
-        onDragLeave={() => setDragOverCategory(null)}
-        onDrop={(e) => handleFolderDrop(e, 'Not Categorized')}
-        className="flex items-center gap-1.5 px-3 py-2 border text-[10px] font-black uppercase tracking-wider transition-all duration-200 shrink-0"
-        style={{
-          borderRadius: radius.base,
-          backgroundColor: activeFilterCategory === 'ALL_ASSETS' || dragOverCategory === 'ALL_ASSETS' ? `${colors.primary}15` : colors.card,
-          borderColor: activeFilterCategory === 'ALL_ASSETS' || dragOverCategory === 'ALL_ASSETS' ? colors.primary : colors.border,
-          color: activeFilterCategory === 'ALL_ASSETS' || dragOverCategory === 'ALL_ASSETS' ? colors.primary : colors.textMuted,
-          boxShadow: activeFilterCategory === 'ALL_ASSETS' ? `0 2px 10px ${colors.primary}10` : 'none',
-          transform: dragOverCategory === 'ALL_ASSETS' ? 'scale(1.05)' : 'none'
-        }}
-      >
-        <Folder className="w-3.5 h-3.5" />
-        All Assets
-      </button>
+    <div className="flex gap-2 items-center overflow-x-auto no-scrollbar shrink-0 pb-1 w-full">
+      {categories.map((cat) => {
+        const isSelected = activeFilterCategory === cat;
+        const isDragOver = dragOverCategory === cat;
+        const isSystemProtected = cat === 'All Assets' || cat === 'Not Categorized';
 
-      {categories.map((cat, index) => {
-        // Fallback safeguard to format and normalize any anomalies in raw database entries safely
-        const cleanCatName = cat && String(cat).trim() !== '' ? String(cat).trim() : `unnamed-slot-${index}`;
-        
-        const isSelected = activeFilterCategory.toLowerCase() === cleanCatName.toLowerCase();
-        const isHoveredDrag = dragOverCategory === cleanCatName;
-        
         return (
-          <button
-            /* 🔴 FIXED: Appended index token to guarantee complete global uniqueness across empty string database values */
-            key={`filter-${cleanCatName}-${index}`}
-            type="button"
-            onClick={() => changeFilterCategory(cleanCatName)}
-            onDragOver={(e) => { e.preventDefault(); role === 'admin' && setDragOverCategory(cleanCatName); }}
+          <div
+            key={cat}
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (role === 'admin') setDragOverCategory(cat);
+            }}
             onDragLeave={() => setDragOverCategory(null)}
-            onDrop={(e) => handleFolderDrop(e, cleanCatName)}
-            className="flex items-center gap-1.5 px-3 py-2 border text-[10px] font-black uppercase tracking-wider transition-all duration-200 shrink-0"
+            onDrop={(e) => {
+              setDragOverCategory(null);
+              handleFolderDrop(e, cat);
+            }}
+            className="flex items-center shrink-0 transition-all duration-150"
             style={{
-              borderRadius: radius.base,
-              backgroundColor: isSelected || isHoveredDrag ? `${colors.primary}15` : colors.card,
-              borderColor: isSelected || isHoveredDrag ? colors.primary : colors.border,
-              color: isSelected || isHoveredDrag ? colors.primary : colors.textMuted,
-              boxShadow: isSelected ? `0 2px 10px ${colors.primary}10` : 'none',
-              transform: isHoveredDrag ? 'scale(1.05)' : 'none'
+              borderRadius: '9999px',
+              backgroundColor: isDragOver ? `${colors.primary}15` : 'transparent',
             }}
           >
-            <Folder className="w-3.5 h-3.5" style={{ color: isSelected || isHoveredDrag ? colors.primary : colors.textMuted }} />
-            {cleanCatName}
-          </button>
+            {/* Folder Filter Toggle Button Structure */}
+            <button
+              type="button"
+              onClick={() => changeFilterCategory(cat)}
+              className="flex items-center gap-2 pl-3 pr-3 text-[10px] font-black uppercase tracking-wider transition-all duration-200 group/btn"
+              style={{
+                backgroundColor: isSelected ? `${colors.primary}15` : colors.card,
+                borderColor: isSelected ? colors.primary : colors.border,
+                borderWidth: '1px',
+                color: isSelected ? colors.primary : colors.textMuted,
+                borderRadius: '9999px',
+                paddingRight: (role === 'admin' && !isSystemProtected) ? '0.5rem' : '0.75rem',
+                height: '28px'
+              }}
+            >
+              <Folder className="w-3 h-3 shrink-0" />
+              <span>{cat}</span>
+
+              {/* 🌟 THE INLINE TUCKED DELETE BUTTON */}
+              {role === 'admin' && !isSystemProtected && onDeleteCategory && (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Stop folder filtering selection from firing
+                    onDeleteCategory(cat);
+                  }}
+                  className="p-0.5 ml-1 rounded-full text-neutral-400 hover:text-red-500 hover:bg-red-500/10 transition-all cursor-pointer flex items-center justify-center shrink-0"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </span>
+              )}
+            </button>
+          </div>
         );
       })}
     </div>

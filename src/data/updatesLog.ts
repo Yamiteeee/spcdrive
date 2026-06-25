@@ -14,6 +14,31 @@ export interface UpdateLog {
 
 export const updatesRegistry: UpdateLog[] = [
   {
+    id: "v-1-1-3",
+    version: "v1.1.3",
+    deploymentDate: "2026-06-25 09:25 AM",
+    author: "LEAD_DEV",
+    environment: "production",
+    summary: "Upgraded active directory protocols to support real-time user identity mutations and intelligent client-side folder structure cleanups.",
+    modifications: [
+      {
+        type: "patch",
+        scope: "Category Bar Components",
+        description: "Re-engineered structural component prop signatures to resolve type collisions. Destructured handlers smoothly to prevent component interface compilation failures."
+      },
+      {
+        type: "feature",
+        scope: "Reactive Repository Intercepts",
+        description: "Injected local state mutators into category deletion pipelines. purging a category now automatically reassigns orphan assets to 'Not Categorized' instantly in the UI with zero reload friction."
+      },
+      {
+        type: "security",
+        scope: "Identity Management API",
+        description: "Expanded core database mutation logic within user management hooks and profile modals to securely support editing account routing emails alongside display name records."
+      }
+    ]
+  },
+  {
     id: "v-1-1-2",
     version: "v1.1.2",
     deploymentDate: "2026-06-08 11:15 AM",
