@@ -11,7 +11,7 @@ interface CategoryBarProps {
   changeFilterCategory: (category: string) => void;
   setDragOverCategory: (category: string | null) => void;
   handleFolderDrop: (e: React.DragEvent, category: string) => void;
-  onDeleteCategory?: (category: string) => void; // 🌟 Updated operational reference
+  onDeleteCategory?: (category: string) => void; 
 }
 
 export function CategoryBar({
@@ -22,13 +22,18 @@ export function CategoryBar({
   changeFilterCategory,
   setDragOverCategory,
   handleFolderDrop,
-  onDeleteCategory, // 🌟 Destructured here so it's fully accessible below!
+  onDeleteCategory, 
 }: CategoryBarProps) {
   const { colors, radius } = useSPCTheme();
 
+  // 🌟 Ensure 'All Assets' always stays at the start of the navigation matrix
+  const cleanCategories = categories.includes('All Assets') 
+    ? categories 
+    : ['All Assets', ...categories];
+
   return (
     <div className="flex gap-2 items-center overflow-x-auto no-scrollbar shrink-0 pb-1 w-full">
-      {categories.map((cat) => {
+      {cleanCategories.map((cat) => {
         const isSelected = activeFilterCategory === cat;
         const isDragOver = dragOverCategory === cat;
         const isSystemProtected = cat === 'All Assets' || cat === 'Not Categorized';
@@ -69,7 +74,7 @@ export function CategoryBar({
               <Folder className="w-3 h-3 shrink-0" />
               <span>{cat}</span>
 
-              {/* 🌟 THE INLINE TUCKED DELETE BUTTON */}
+              {/* THE INLINE TUCKED DELETE BUTTON */}
               {role === 'admin' && !isSystemProtected && onDeleteCategory && (
                 <span
                   role="button"

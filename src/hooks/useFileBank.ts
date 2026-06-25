@@ -77,12 +77,20 @@ export function useFileBank({ files, searchQuery, onUpdate }: UseFileBankProps) 
   };
 
   // Dynamic Dataset Slicing Layer
-  const filteredFiles = useMemo(() => {
+ const filteredFiles = useMemo(() => {
     let result = files || [];
     
-    if (activeFilterCategory !== 'ALL_ASSETS') {
+    // 🌟 FIX: Standardize checking against common formatting deviations for 'All Assets'
+    const normalizedFilter = activeFilterCategory.trim().toUpperCase().replace('_', ' ');
+    
+    if (normalizedFilter !== 'ALL ASSETS') {
       result = result.filter((file: FileItem) => {
         const fileCat = file.category || 'Not Categorized';
+
+        if (normalizedFilter === 'NOT CATEGORIZED') {
+          return fileCat.toLowerCase() === 'not categorized' || fileCat.trim() === '';
+        }
+
         return fileCat.toLowerCase() === activeFilterCategory.toLowerCase();
       });
     }
